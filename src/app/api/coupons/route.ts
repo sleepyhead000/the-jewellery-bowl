@@ -88,6 +88,15 @@ export async function POST(req: NextRequest) {
       validTo: validTo ? new Date(validTo) : null,
     },
   });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "COUPON_CREATED",
+      entity: "COUPON",
+      entityId: coupon.id,
+      details: { code: coupon.code, type: coupon.type, value: coupon.value },
+    },
+  });
 
   return NextResponse.json(coupon, { status: 201 });
 }

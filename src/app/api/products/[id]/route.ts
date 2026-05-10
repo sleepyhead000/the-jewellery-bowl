@@ -71,6 +71,15 @@ export async function PATCH(
     data: data,
     include: { variants: true, images: true, category: true },
   });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "PRODUCT_UPDATED",
+      entity: "PRODUCT",
+      entityId: id,
+      details: data,
+    },
+  });
 
   return NextResponse.json(product);
 }
@@ -86,5 +95,13 @@ export async function DELETE(
 
   const { id } = await params;
   await db.product.delete({ where: { id } });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "PRODUCT_DELETED",
+      entity: "PRODUCT",
+      entityId: id,
+    },
+  });
   return NextResponse.json({ success: true });
 }

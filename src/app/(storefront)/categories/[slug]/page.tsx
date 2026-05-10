@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const category = await db.category.findFirst({ where: { slug } });
   if (!category) return { title: "Category Not Found" };
-  return { title: `${category.name} — TN Luxury` };
+  return { title: `${category.name} — The Jewellery Bowl` };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {

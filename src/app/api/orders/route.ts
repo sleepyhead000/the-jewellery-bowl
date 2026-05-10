@@ -4,6 +4,8 @@ import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyPaymentSubmitted } from "@/lib/discord";
+import { sendAdminPushNotification } from "@/lib/push";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -60,6 +62,13 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Please log in" }, { status: 401 });
+  }
+  const limiter = await rateLimit(`orders:create:${session.user.id}`, 6, 300);
+  if (!limiter.allowed) {
+    return NextResponse.json(
+      { error: "Too many checkout attempts. Please wait and try again." },
+      { status: 429, headers: rateLimitHeaders(limiter) }
+    );
   }
 
   const body = await req.json();
@@ -246,6 +255,15 @@ export async function POST(req: NextRequest) {
     transactionId: transactionId || undefined,
     screenshotUrl: screenshotUrl || undefined,
     orderId: order.id,
+  }).catch(console.error);
+
+  sendAdminPushNotification({
+    title: `New order ${order.orderNumber}`,
+    message: `Payment submitted via ${paymentMethod}. Review in admin panel.`,
+    type: "ORDER_CREATED",
+    priority: "HIGH",
+    entity: "order",
+    entityId: order.id,
   }).catch(console.error);
 
   return NextResponse.json({

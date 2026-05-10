@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, Truck, CreditCard } from "lucide-react";
-import { Button, Input, Modal, Tabs } from "@/components/ui";
+import { Button, Input, Modal, Tabs, Textarea } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
 
 interface ShippingZone {
@@ -20,6 +20,30 @@ interface PaymentAccount {
   isActive: boolean;
 }
 
+interface HeroSettings {
+  label: string;
+  titleLine1: string;
+  titleAccent: string;
+  titleLine2: string;
+  subtitle: string;
+  primaryCtaText: string;
+  primaryCtaHref: string;
+  secondaryCtaText: string;
+  secondaryCtaHref: string;
+  trustItems: string[];
+}
+
+interface ProductOption {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface HomepageProductsSettings {
+  featuredIds: string[];
+  popularIds: string[];
+}
+
 const BD_DIVISIONS = ["Dhaka", "Chittagong", "Rajshahi", "Khulna", "Barisal", "Sylhet", "Rangpur", "Mymensingh"];
 
 export default function AdminSettingsPage() {
@@ -30,13 +54,15 @@ export default function AdminSettingsPage() {
         tabs={[
           { id: "shipping", label: "Shipping Zones", content: <ShippingZonesSection /> },
           { id: "payments", label: "Payment Accounts", content: <PaymentAccountsSection /> },
+          { id: "hero", label: "Hero", content: <HeroSettingsSection /> },
+          { id: "homepage-products", label: "Homepage Products", content: <HomepageProductsSection /> },
         ]}
       />
     </div>
   );
 }
 
-// ─── Shipping Zones ─────────────────────────────────────
+// â”€â”€â”€ Shipping Zones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ShippingZonesSection() {
   const [zones, setZones] = useState<ShippingZone[]>([]);
@@ -160,7 +186,7 @@ function ShippingZonesSection() {
   );
 }
 
-// ─── Payment Accounts ───────────────────────────────────
+// â”€â”€â”€ Payment Accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function PaymentAccountsSection() {
   const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
@@ -228,7 +254,7 @@ function PaymentAccountsSection() {
               <tr key={acc.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm font-medium uppercase">{acc.method}</td>
                 <td className="px-6 py-4 text-sm font-mono">{acc.accountNumber}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{acc.accountName || "—"}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{acc.accountName || "â€”"}</td>
                 <td className="px-6 py-4 text-center">
                   <button onClick={() => toggleActive(acc.id, acc.isActive)} className={`text-xs px-3 py-1 rounded-full font-medium ${acc.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                     {acc.isActive ? "Active" : "Inactive"}
@@ -266,5 +292,216 @@ function PaymentAccountsSection() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+function HeroSettingsSection() {
+  const [form, setForm] = useState<HeroSettings>({
+    label: "",
+    titleLine1: "",
+    titleAccent: "",
+    titleLine2: "",
+    subtitle: "",
+    primaryCtaText: "",
+    primaryCtaHref: "",
+    secondaryCtaText: "",
+    secondaryCtaHref: "",
+    trustItems: ["", "", ""],
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchHeroSettings = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
+    const res = await fetch("/api/admin/settings/hero");
+    const data = await res.json();
+    setForm({
+      label: data.label || "",
+      titleLine1: data.titleLine1 || "",
+      titleAccent: data.titleAccent || "",
+      titleLine2: data.titleLine2 || "",
+      subtitle: data.subtitle || "",
+      primaryCtaText: data.primaryCtaText || "",
+      primaryCtaHref: data.primaryCtaHref || "",
+      secondaryCtaText: data.secondaryCtaText || "",
+      secondaryCtaHref: data.secondaryCtaHref || "",
+      trustItems: Array.isArray(data.trustItems) ? data.trustItems.slice(0, 3) : ["", "", ""],
+    });
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchHeroSettings();
+  }, [fetchHeroSettings]);
+
+  const updateTrustItem = (index: number, value: string) => {
+    setForm((prev) => {
+      const next = [...prev.trustItems];
+      next[index] = value;
+      return { ...prev, trustItems: next };
+    });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    const payload: HeroSettings = {
+      ...form,
+      trustItems: [...form.trustItems, "", "", ""].slice(0, 3),
+    };
+
+    const res = await fetch("/api/admin/settings/hero", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    setSaving(false);
+    if (!res.ok) {
+      setMessage("Failed to save hero settings.");
+      return;
+    }
+    setMessage("Hero settings saved.");
+  };
+
+  if (loading) {
+    return <p className="text-sm text-gray-500">Loading hero settings...</p>;
+  }
+
+  return (
+    <form onSubmit={handleSave} className="space-y-4 max-w-3xl">
+      <p className="text-sm text-gray-500">Control the storefront hero content for desktop and mobile.</p>
+      <Input label="Label" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} required />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Input label="Title Line 1" value={form.titleLine1} onChange={(e) => setForm((f) => ({ ...f, titleLine1: e.target.value }))} required />
+        <Input label="Title Accent" value={form.titleAccent} onChange={(e) => setForm((f) => ({ ...f, titleAccent: e.target.value }))} required />
+        <Input label="Title Line 2" value={form.titleLine2} onChange={(e) => setForm((f) => ({ ...f, titleLine2: e.target.value }))} required />
+      </div>
+      <Textarea label="Subtitle" value={form.subtitle} onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))} required />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Input label="Primary CTA Text" value={form.primaryCtaText} onChange={(e) => setForm((f) => ({ ...f, primaryCtaText: e.target.value }))} required />
+        <Input label="Primary CTA URL" value={form.primaryCtaHref} onChange={(e) => setForm((f) => ({ ...f, primaryCtaHref: e.target.value }))} required />
+        <Input label="Secondary CTA Text" value={form.secondaryCtaText} onChange={(e) => setForm((f) => ({ ...f, secondaryCtaText: e.target.value }))} required />
+        <Input label="Secondary CTA URL" value={form.secondaryCtaHref} onChange={(e) => setForm((f) => ({ ...f, secondaryCtaHref: e.target.value }))} required />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Input label="Trust Item 1" value={form.trustItems[0] || ""} onChange={(e) => updateTrustItem(0, e.target.value)} required />
+        <Input label="Trust Item 2" value={form.trustItems[1] || ""} onChange={(e) => updateTrustItem(1, e.target.value)} required />
+        <Input label="Trust Item 3" value={form.trustItems[2] || ""} onChange={(e) => updateTrustItem(2, e.target.value)} required />
+      </div>
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Hero Settings"}</Button>
+        {message && <p className="text-sm text-gray-600">{message}</p>}
+      </div>
+    </form>
+  );
+}
+
+function HomepageProductsSection() {
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [form, setForm] = useState<HomepageProductsSettings>({ featuredIds: [], popularIds: [] });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
+
+    const [productsRes, settingsRes] = await Promise.all([
+      fetch("/api/products?status=ACTIVE&limit=200"),
+      fetch("/api/admin/settings/homepage-products"),
+    ]);
+
+    const productsJson = await productsRes.json();
+    const settingsJson = await settingsRes.json();
+
+    setProducts(Array.isArray(productsJson.products) ? productsJson.products : []);
+    setForm({
+      featuredIds: Array.isArray(settingsJson.featuredIds) ? settingsJson.featuredIds : [],
+      popularIds: Array.isArray(settingsJson.popularIds) ? settingsJson.popularIds : [],
+    });
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const toggleId = (key: "featuredIds" | "popularIds", id: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(id) ? prev[key].filter((x) => x !== id) : [...prev[key], id],
+    }));
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    const res = await fetch("/api/admin/settings/homepage-products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    setSaving(false);
+    if (!res.ok) {
+      setMessage("Failed to save homepage product settings.");
+      return;
+    }
+    setMessage("Homepage product settings saved.");
+  };
+
+  if (loading) return <p className="text-sm text-gray-500">Loading homepage product settings...</p>;
+
+  return (
+    <form onSubmit={handleSave} className="space-y-6">
+      <p className="text-sm text-gray-500">
+        Select products for Featured and Popular sections. New Arrivals remains automatic.
+      </p>
+
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Featured Products</h3>
+        <div className="max-h-72 overflow-auto border border-gray-200 rounded-lg p-3 space-y-2">
+          {products.map((p) => (
+            <label key={`featured-${p.id}`} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.featuredIds.includes(p.id)}
+                onChange={() => toggleId("featuredIds", p.id)}
+              />
+              <span>{p.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Popular Products</h3>
+        <div className="max-h-72 overflow-auto border border-gray-200 rounded-lg p-3 space-y-2">
+          {products.map((p) => (
+            <label key={`popular-${p.id}`} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.popularIds.includes(p.id)}
+                onChange={() => toggleId("popularIds", p.id)}
+              />
+              <span>{p.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Homepage Products"}</Button>
+        {message && <p className="text-sm text-gray-600">{message}</p>}
+      </div>
+    </form>
   );
 }

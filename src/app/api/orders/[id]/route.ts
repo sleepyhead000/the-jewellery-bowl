@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { notifyOrderStatusChanged } from "@/lib/discord";
+import { sendAdminPushNotification } from "@/lib/push";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -59,6 +61,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (!session?.user || !hasPermission(session.user.role, "orders.update")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const limiter = await rateLimit(`orders:update:${session.user.id}`, 40, 300);
+  if (!limiter.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests." },
+      { status: 429, headers: rateLimitHeaders(limiter) }
+    );
+  }
 
   const { id } = await params;
   const body = await req.json();
@@ -94,11 +103,28 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         where: { id },
         data: { status: "CONFIRMED" },
       });
+      await db.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "PAYMENT_VERIFIED",
+          entity: "ORDER",
+          entityId: id,
+          details: { paymentId: order.payment.id, adminNote: adminNote || null },
+        },
+      });
 
       notifyOrderStatusChanged({
         orderNumber: order.orderNumber,
         status: "CONFIRMED",
         adminName: session.user.name || "Admin",
+      }).catch(console.error);
+      sendAdminPushNotification({
+        title: `Payment verified: ${order.orderNumber}`,
+        message: `Order moved to CONFIRMED by ${session.user.name || "Admin"}.`,
+        type: "PAYMENT_VERIFIED",
+        priority: "HIGH",
+        entity: "order",
+        entityId: id,
       }).catch(console.error);
 
       return NextResponse.json({ success: true, status: "CONFIRMED" });
@@ -127,11 +153,28 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         where: { id },
         data: { status: "CANCELLED" },
       });
+      await db.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "PAYMENT_REJECTED",
+          entity: "ORDER",
+          entityId: id,
+          details: { paymentId: order.payment.id, adminNote: adminNote || null },
+        },
+      });
 
       notifyOrderStatusChanged({
         orderNumber: order.orderNumber,
         status: "CANCELLED",
         adminName: session.user.name || "Admin",
+      }).catch(console.error);
+      sendAdminPushNotification({
+        title: `Payment rejected: ${order.orderNumber}`,
+        message: `Order cancelled and stock restored by ${session.user.name || "Admin"}.`,
+        type: "PAYMENT_REJECTED",
+        priority: "HIGH",
+        entity: "order",
+        entityId: id,
       }).catch(console.error);
 
       return NextResponse.json({ success: true, status: "CANCELLED" });
@@ -144,11 +187,28 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       where: { id },
       data: { status: status as "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" },
     });
+    await db.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "ORDER_STATUS_UPDATED",
+        entity: "ORDER",
+        entityId: id,
+        details: { status },
+      },
+    });
 
     notifyOrderStatusChanged({
       orderNumber: order.orderNumber,
       status,
       adminName: session.user.name || "Admin",
+    }).catch(console.error);
+    sendAdminPushNotification({
+      title: `Order status updated: ${order.orderNumber}`,
+      message: `Status changed to ${status}.`,
+      type: "ORDER_STATUS_UPDATED",
+      priority: "MEDIUM",
+      entity: "order",
+      entityId: id,
     }).catch(console.error);
 
     return NextResponse.json({ success: true, status });

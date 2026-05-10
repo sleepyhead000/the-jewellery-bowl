@@ -21,6 +21,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     where: { id },
     data: body,
   });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "COUPON_UPDATED",
+      entity: "COUPON",
+      entityId: id,
+      details: body,
+    },
+  });
 
   return NextResponse.json(coupon);
 }
@@ -34,5 +43,13 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
   const { id } = await params;
   await db.coupon.delete({ where: { id } });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "COUPON_DELETED",
+      entity: "COUPON",
+      entityId: id,
+    },
+  });
   return NextResponse.json({ success: true });
 }

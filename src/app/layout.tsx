@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TN Luxury | The Art of Elegance",
+  title: "The Jewellery Bowl | The Art of Elegance",
   description: "Luxury Phone Covers, Gadgets & Accessories",
 };
 

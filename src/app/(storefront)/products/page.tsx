@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
 import ProductCard from "@/components/storefront/ProductCard";
+import MobileFilterSortDrawer from "@/components/storefront/MobileFilterSortDrawer";
 
 interface Props {
   searchParams: Promise<{ category?: string; sort?: string; page?: string }>;
@@ -44,22 +45,25 @@ export default async function ProductsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12" style={{ color: "#E8D9B0" }}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold uppercase tracking-tight">All Products</h1>
-        <p className="text-gray-500 text-sm mt-1">{total} product{total !== 1 ? "s" : ""}</p>
+        <p className="text-sm mt-1" style={{ color: "rgba(232,217,176,0.75)" }}>
+          {total} product{total !== 1 ? "s" : ""}
+        </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
-        <aside className="lg:w-56 shrink-0 space-y-6">
+        <aside className="hidden lg:block lg:w-56 shrink-0 space-y-6">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wide mb-3">Categories</h3>
             <ul className="space-y-1.5">
               <li>
                 <Link
                   href="/products"
-                  className={`text-sm hover:text-black transition-colors ${!params.category ? "font-bold text-black" : "text-gray-500"}`}
+                  className={`text-sm transition-colors ${!params.category ? "font-bold" : ""}`}
+                  style={{ color: !params.category ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
                 >
                   All
                 </Link>
@@ -68,10 +72,13 @@ export default async function ProductsPage({ searchParams }: Props) {
                 <li key={cat.id}>
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className={`text-sm hover:text-black transition-colors ${params.category === cat.slug ? "font-bold text-black" : "text-gray-500"}`}
+                    className={`text-sm transition-colors ${params.category === cat.slug ? "font-bold" : ""}`}
+                    style={{ color: params.category === cat.slug ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
                   >
                     {cat.name}
-                    <span className="text-gray-300 ml-1">({cat._count.products})</span>
+                    <span className="ml-1" style={{ color: "rgba(232,217,176,0.55)" }}>
+                      ({cat._count.products})
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -89,7 +96,8 @@ export default async function ProductsPage({ searchParams }: Props) {
                 <li key={option.value}>
                   <Link
                     href={`/products?${new URLSearchParams({ ...params, sort: option.value, page: "1" }).toString()}`}
-                    className={`text-sm hover:text-black transition-colors ${(params.sort || "newest") === option.value ? "font-bold text-black" : "text-gray-500"}`}
+                    className={`text-sm transition-colors ${(params.sort || "newest") === option.value ? "font-bold" : ""}`}
+                    style={{ color: (params.sort || "newest") === option.value ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
                   >
                     {option.label}
                   </Link>
@@ -103,7 +111,7 @@ export default async function ProductsPage({ searchParams }: Props) {
         <div className="flex-1">
           {products.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
-              <p className="text-sm">No products found</p>
+              <p className="text-sm" style={{ color: "rgba(232,217,176,0.7)" }}>No products found</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -142,6 +150,9 @@ export default async function ProductsPage({ searchParams }: Props) {
           )}
         </div>
       </div>
+      <MobileFilterSortDrawer
+        categories={categories.map((cat) => ({ id: cat.id, name: cat.name, slug: cat.slug }))}
+      />
     </div>
   );
 }

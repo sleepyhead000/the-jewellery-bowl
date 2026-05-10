@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ─── USERS & AUTH ───────────────────────────────────────
@@ -117,7 +117,7 @@ model Product {
   basePrice       Int // stored in paisa (BDT * 100) for precision
   status          String        @default("DRAFT")
   categoryId      String?
-  tags            String[]
+  tags            Json
   isFeatured      Boolean       @default(false)
   metaTitle       String?
   metaDescription String?
@@ -280,7 +280,7 @@ model PaymentAccount {
 model ShippingZone {
   id        String   @id @default(cuid())
   name      String
-  divisions String[]
+  divisions Json
   flatRate  Int // paisa
 }
 

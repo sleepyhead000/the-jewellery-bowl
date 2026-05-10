@@ -9,6 +9,7 @@ type Role = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
  */
 export const authConfig = {
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

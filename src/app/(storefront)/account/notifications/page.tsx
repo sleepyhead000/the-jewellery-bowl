@@ -53,13 +53,13 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold uppercase tracking-tight">Notifications</h1>
+          <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Notifications</h1>
           {unreadCount > 0 && <Badge variant="warning">{unreadCount} unread</Badge>}
         </div>
         {unreadCount > 0 && (
-          <Button size="sm" variant="outline" onClick={markAllRead}>
+          <Button size="sm" variant="outline" onClick={markAllRead} className="w-full sm:w-auto min-h-10">
             <CheckCheck className="h-3.5 w-3.5 mr-1.5" /> Mark all read
           </Button>
         )}
@@ -79,10 +79,10 @@ export default function NotificationsPage() {
                 n.isRead ? "border-gray-100 bg-white" : "border-gray-200 bg-gray-50"
               }`}
             >
-              <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${n.isRead ? "bg-transparent" : "bg-black"}`} />
+              <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${n.isRead ? "bg-transparent" : "bg-black"}`} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{n.title}</p>
-                <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
+                <p className="text-sm font-medium break-words">{n.title}</p>
+                <p className="text-sm text-gray-500 mt-0.5 break-words">{n.message}</p>
                 <p className="text-xs text-gray-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
               </div>
               {!n.isRead && (
@@ -97,3 +97,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

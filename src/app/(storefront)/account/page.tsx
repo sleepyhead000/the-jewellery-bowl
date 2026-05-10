@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, Save } from "lucide-react";
+import { User, Phone, Save } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 
 export default function ProfilePage() {
@@ -47,16 +47,18 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold uppercase tracking-tight mb-8">My Profile</h1>
+      <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight mb-6 sm:mb-8">My Profile</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-          <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="flex items-center gap-3 sm:gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-full flex items-center justify-center">
             <User className="h-6 w-6 text-gray-400" />
           </div>
           <div>
-            <p className="font-medium">{profile.name || "—"}</p>
-            <p className="text-sm text-gray-500">Member since {new Date(profile.createdAt || "").toLocaleDateString()}</p>
+            <p className="font-medium">{profile.name || "-"}</p>
+            <p className="text-xs sm:text-sm text-gray-500">
+              Member since {new Date(profile.createdAt || "").toLocaleDateString()}
+            </p>
           </div>
         </div>
 
@@ -77,9 +79,9 @@ export default function ProfilePage() {
 
         <div>
           <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Phone Number</label>
-          <div className="flex items-center gap-2 px-4 py-3 border border-gray-200 bg-gray-50 text-sm text-gray-500">
+          <div className="flex items-center gap-2 px-4 py-3 border border-gray-200 bg-gray-50 text-sm text-gray-500 rounded-md">
             <Phone className="h-4 w-4" />
-            {profile.phone || "—"}
+            {profile.phone || "-"}
           </div>
           <p className="text-xs text-gray-400 mt-1">Phone number cannot be changed</p>
         </div>
@@ -88,10 +90,11 @@ export default function ProfilePage() {
           <p className={`text-sm ${message.includes("success") ? "text-green-600" : "text-red-500"}`}>{message}</p>
         )}
 
-        <Button type="submit" disabled={saving} className="w-full">
+        <Button type="submit" disabled={saving} className="w-full min-h-11">
           <Save className="h-4 w-4 mr-2" /> {saving ? "Saving..." : "Save Changes"}
         </Button>
       </form>
     </div>
   );
 }
+

@@ -84,9 +84,9 @@ export default function ProductCard({ id, slug, name, image, price, salePrice, v
                         <button
                             onClick={handleQuickAdd}
                             disabled={adding}
-                            className="md:hidden absolute bottom-2 right-2 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform disabled:opacity-50"
+                            className="md:hidden absolute bottom-3 right-3 z-10 w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-50 hover:bg-[#C9A84C] hover:text-white"
                         >
-                            <ShoppingBag className="h-3.5 w-3.5" />
+                            <ShoppingBag className="h-5 w-5" />
                         </button>
                     </>
                 )}
@@ -97,11 +97,13 @@ export default function ProductCard({ id, slug, name, image, price, salePrice, v
                 <div className="text-xs font-medium space-x-2">
                     {hasSale ? (
                         <>
-                            <span className="text-sale">BDT {salePrice.toLocaleString()}</span>
-                            <span className="text-gray-400 line-through">BDT {price.toLocaleString()}</span>
+                            <span style={{ color: "#9E0B0B" }}>BDT {salePrice.toLocaleString()}</span>
+                            <span className="line-through" style={{ color: "#7a6e58" }}>
+                                BDT {price.toLocaleString()}
+                            </span>
                         </>
                     ) : (
-                        <span className="text-gray-700">BDT {price.toLocaleString()}</span>
+                        <span style={{ color: "#E8D9B0" }}>BDT {price.toLocaleString()}</span>
                     )}
                 </div>
             </div>

@@ -5,18 +5,37 @@ import { Facebook, Instagram, Twitter, ChevronDown } from "lucide-react";
 import { subscribeNewsletter } from "@/app/actions/newsletter";
 import { useState, useTransition } from "react";
 
+const B = {
+    bg:     "#000000",
+    surface:"#0d0d0d",
+    brand:  "#8B1A1A",
+    gold:   "#C9A84C",
+    text:   "#E8D9B0",
+    muted:  "#7a6e58",
+    border: "rgba(201,168,76,0.18)",
+};
+
 function FooterAccordion({ title, children }: { title: string; children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
     return (
-        <div className="border-b border-gray-100 md:border-0">
+        <div className="md:border-0 border-b" style={{ borderColor: B.border }}>
             <button
                 onClick={() => setOpen(!open)}
-                className="md:hidden flex w-full items-center justify-between py-4 text-sm font-bold uppercase tracking-wide font-display"
+                className="md:hidden flex w-full items-center justify-between py-4 text-xs font-bold uppercase tracking-[0.2em] font-display"
+                style={{ color: B.text }}
             >
                 {title}
-                <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+                <ChevronDown
+                    className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                    style={{ color: B.muted }}
+                />
             </button>
-            <h5 className="hidden md:block text-sm font-bold uppercase tracking-wide font-display mb-4">{title}</h5>
+            <h5
+                className="hidden md:block text-xs font-bold uppercase tracking-[0.2em] font-display mb-4"
+                style={{ color: B.text }}
+            >
+                {title}
+            </h5>
             <div className={`${open ? "block" : "hidden"} md:block pb-4 md:pb-0`}>
                 {children}
             </div>
@@ -40,101 +59,173 @@ export default function Footer() {
         });
     };
 
+    const socialLinks = [
+        { Icon: Facebook,  href: "#" },
+        { Icon: Instagram, href: "#" },
+        { Icon: Twitter,   href: "#" },
+    ];
+
     return (
-        <footer className="w-full bg-white border-t border-gray-100 pt-16 pb-8">
+        <footer
+            className="w-full pt-16 pb-8"
+            style={{ background: B.bg, borderTop: `1px solid ${B.border}` }}
+        >
             <div className="container mx-auto px-4 md:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-12 mb-16">
+
                     {/* Newsletter — first on mobile */}
-                    <div className="space-y-4 order-first md:order-last pb-6 md:pb-0 border-b border-gray-100 md:border-0">
-                        <h5 className="text-sm font-bold uppercase tracking-wide font-display">Get 10% Off</h5>
-                        <p className="text-sm text-gray-500 font-body">
+                    <div
+                        className="space-y-4 order-first md:order-last pb-6 md:pb-0 border-b md:border-0"
+                        style={{ borderColor: B.border }}
+                    >
+                        <h5
+                            className="text-xs font-bold uppercase tracking-[0.2em] font-display"
+                            style={{ color: B.text }}
+                        >
+                            Get 10% Off
+                        </h5>
+                        <p className="text-sm font-body" style={{ color: B.muted }}>
                             Join our list and get 10% off your first order.
                         </p>
                         <form action={handleSubmit} className="space-y-2">
-                            <div className="flex border border-gray-300 p-1">
+                            <div
+                                className="flex"
+                                style={{ border: `1px solid ${B.border}` }}
+                            >
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="EMAIL ADDRESS"
                                     required
-                                    className="flex-1 px-3 py-2 text-sm outline-none placeholder:text-gray-300 font-body"
+                                    className="flex-1 px-3 py-2.5 text-xs outline-none font-body bg-transparent placeholder:tracking-widest"
+                                    style={{ color: B.text }}
                                 />
                                 <button
                                     type="submit"
                                     disabled={isPending}
-                                    className="bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    className="px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors duration-200 disabled:opacity-50"
+                                    style={{ background: B.brand, color: B.text }}
                                 >
                                     {isPending ? "..." : "Join"}
                                 </button>
                             </div>
                             {message && (
-                                <p className={`text-xs font-body ${message.type === "success" ? "text-green-600" : "text-sale"}`}>
+                                <p
+                                    className="text-xs font-body"
+                                    style={{ color: message.type === "success" ? B.gold : B.brand }}
+                                >
                                     {message.text}
                                 </p>
                             )}
                         </form>
                     </div>
 
-                    {/* Brand */}
+                    {/* Brand — desktop only */}
                     <div className="space-y-4 hidden md:block">
-                        <h4 className="text-2xl font-bold uppercase tracking-tight font-display">TN Luxury</h4>
-                        <p className="text-sm text-gray-500 leading-relaxed font-body">
-                            Experience the art of elegance with our premium collection of accessories.
-                            Designed for those who appreciate the finer things in life.
+                        <h4
+                            className="text-2xl font-bold uppercase tracking-tight font-display"
+                            style={{
+                                fontFamily: "var(--font-cormorant), 'Palatino Linotype', serif",
+                                color: B.text,
+                            }}
+                        >
+                            The Jewellery Bowl
+                        </h4>
+                        <div className="w-10 h-px" style={{ background: B.gold, opacity: 0.5 }} />
+                        <p className="text-sm leading-relaxed font-body" style={{ color: B.muted }}>
+                            Experience the art of elegance with our premium collection of
+                            traditional Bengali accessories. Designed for those who carry
+                            culture in every movement.
                         </p>
                         <div className="flex gap-4 pt-2">
-                            <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                                <Facebook className="h-5 w-5" />
-                            </Link>
-                            <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                                <Instagram className="h-5 w-5" />
-                            </Link>
-                            <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                                <Twitter className="h-5 w-5" />
-                            </Link>
+                            {socialLinks.map(({ Icon, href }, i) => (
+                                <Link
+                                    key={i}
+                                    href={href}
+                                    className="transition-colors duration-200 hover:text-[#C9A84C]"
+                                    style={{ color: B.muted }}
+                                >
+                                    <Icon className="h-5 w-5" />
+                                </Link>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Shop — accordion on mobile */}
+                    {/* Shop */}
                     <FooterAccordion title="Shop">
-                        <ul className="space-y-2 text-sm text-gray-500 font-body">
-                            <li><Link href="/products" className="hover:text-black transition-colors">All Products</Link></li>
-                            <li><Link href="/products?sort=newest" className="hover:text-black transition-colors">New Arrivals</Link></li>
-                            <li><Link href="/products?featured=true" className="hover:text-black transition-colors">Featured</Link></li>
-                            <li><Link href="/products?sale=true" className="hover:text-black transition-colors">Sale</Link></li>
+                        <ul className="space-y-2.5 text-sm font-body">
+                            {[
+                                { label: "All Products",  href: "/products" },
+                                { label: "New Arrivals",  href: "/products?sort=newest" },
+                                { label: "Featured",      href: "/products?featured=true" },
+                                { label: "Sale",          href: "/products?sale=true" },
+                            ].map((l) => (
+                                <li key={l.label}>
+                                    <Link
+                                        href={l.href}
+                                        className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                        style={{ color: B.muted }}
+                                    >
+                                        {l.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </FooterAccordion>
 
-                    {/* Support — accordion on mobile */}
+                    {/* Support */}
                     <FooterAccordion title="Support">
-                        <ul className="space-y-2 text-sm text-gray-500 font-body">
-                            <li><Link href="#" className="hover:text-black transition-colors">Contact Us</Link></li>
-                            <li><Link href="#" className="hover:text-black transition-colors">FAQs</Link></li>
-                            <li><Link href="#" className="hover:text-black transition-colors">Shipping Info</Link></li>
-                            <li><Link href="#" className="hover:text-black transition-colors">Returns</Link></li>
+                        <ul className="space-y-2.5 text-sm font-body">
+                            {[
+                                { label: "Contact Us",    href: "#" },
+                                { label: "FAQs",          href: "#" },
+                                { label: "Shipping Info", href: "#" },
+                                { label: "Returns",       href: "#" },
+                            ].map((l) => (
+                                <li key={l.label}>
+                                    <Link
+                                        href={l.href}
+                                        className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                        style={{ color: B.muted }}
+                                    >
+                                        {l.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </FooterAccordion>
                 </div>
 
-                {/* Bottom */}
-                <div className="border-t border-gray-100 pt-8 flex flex-col items-center gap-4 text-xs text-gray-400 font-body">
+                {/* Bottom bar */}
+                <div
+                    className="border-t pt-8 flex flex-col items-center gap-4 text-xs font-body"
+                    style={{ borderColor: B.border, color: B.muted }}
+                >
                     {/* Mobile social icons */}
                     <div className="flex gap-5 md:hidden">
-                        <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                            <Facebook className="h-5 w-5" />
-                        </Link>
-                        <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                            <Instagram className="h-5 w-5" />
-                        </Link>
-                        <Link href="#" className="text-gray-400 hover:text-black transition-colors">
-                            <Twitter className="h-5 w-5" />
-                        </Link>
+                        {socialLinks.map(({ Icon, href }, i) => (
+                            <Link
+                                key={i}
+                                href={href}
+                                className="transition-colors duration-200 hover:text-[#C9A84C]"
+                                style={{ color: B.muted }}
+                            >
+                                <Icon className="h-5 w-5" />
+                            </Link>
+                        ))}
                     </div>
                     <div className="flex flex-col md:flex-row w-full justify-between items-center gap-4">
-                        <p>&copy; {new Date().getFullYear()} TN Luxury. All rights reserved.</p>
-                        <div className="flex gap-4">
-                            <Link href="#" className="hover:text-black">Privacy Policy</Link>
-                            <Link href="#" className="hover:text-black">Terms of Service</Link>
+                        <p>&copy; {new Date().getFullYear()} The Jewellery Bowl. All rights reserved.</p>
+                        <div className="flex gap-5">
+                            {["Privacy Policy", "Terms of Service"].map((l) => (
+                                <Link
+                                    key={l}
+                                    href="#"
+                                    className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                >
+                                    {l}
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 </div>

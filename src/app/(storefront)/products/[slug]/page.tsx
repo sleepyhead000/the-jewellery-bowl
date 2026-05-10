@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props) {
   const product = await db.product.findFirst({ where: { slug, status: "ACTIVE" } });
   if (!product) return { title: "Product Not Found" };
   return {
-    title: `${product.name} — TN Luxury`,
+    title: `${product.name} — The Jewellery Bowl`,
     description: product.description?.slice(0, 160),
   };
 }

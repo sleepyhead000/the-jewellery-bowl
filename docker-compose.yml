@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: tnluxury_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    depends_on:
+      - db
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/admin/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:16-alpine
+    container_name: tnluxury_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tnluxury
+      POSTGRES_USER: tnluxury
+      POSTGRES_PASSWORD: tnluxury
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tnluxury -d tnluxury"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: tnluxury_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+  redis_data:
+

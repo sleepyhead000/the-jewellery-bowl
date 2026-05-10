@@ -134,6 +134,15 @@ export async function POST(req: NextRequest) {
       category: true,
     },
   });
+  await db.auditLog.create({
+    data: {
+      userId: session.user.id,
+      action: "PRODUCT_CREATED",
+      entity: "PRODUCT",
+      entityId: product.id,
+      details: { name: product.name, slug: product.slug },
+    },
+  });
 
   return NextResponse.json(product, { status: 201 });
 }

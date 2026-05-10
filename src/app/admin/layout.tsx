@@ -35,7 +35,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col bg-gray-950 text-white">
         <div className="p-6 border-b border-gray-800">
@@ -69,15 +69,15 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white">
-          <h2 className="text-lg font-bold uppercase tracking-tight">Dashboard</h2>
+        <header className="h-16 border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 bg-white">
+          <h2 className="text-base sm:text-lg font-bold uppercase tracking-tight">Dashboard</h2>
           <div className="flex items-center gap-4">
             <button className="relative hover:text-gray-600 transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
-                3
+                !
               </span>
             </button>
             <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold">
@@ -87,7 +87,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 bg-gray-50">
+        <main className="flex-1 p-4 sm:p-6 bg-gray-50 overflow-x-hidden">
           {children}
         </main>
       </div>

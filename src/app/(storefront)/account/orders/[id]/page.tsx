@@ -45,22 +45,21 @@ export default function CustomerOrderDetailPage({ params }: Props) {
 
   return (
     <div>
-      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-black transition-colors mb-6">
+      <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-black transition-colors mb-4 sm:mb-6">
         <ArrowLeft className="h-4 w-4" /> Back to Orders
       </Link>
 
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold uppercase tracking-tight">Order #{order.orderNumber as string}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Order #{order.orderNumber as string}</h1>
           <p className="text-sm text-gray-500 mt-1">{new Date(order.createdAt as string).toLocaleString()}</p>
         </div>
         <Badge variant={STATUS_COLORS[currentStatus] || "default"}>{currentStatus}</Badge>
       </div>
 
-      {/* Status Timeline */}
       {!isCancelled && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between relative">
+        <div className="mb-8 sm:mb-10 overflow-x-auto">
+          <div className="min-w-[520px] flex items-center justify-between relative">
             <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200" />
             <div className="absolute top-4 left-0 h-0.5 bg-black transition-all" style={{ width: `${Math.max(0, currentStep) / (STATUS_FLOW.length - 1) * 100}%` }} />
             {STATUS_FLOW.map((status, i) => {
@@ -79,7 +78,6 @@ export default function CustomerOrderDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Payment Status Banner */}
       {payment?.status === "PENDING_VERIFICATION" && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-sm text-amber-800">
           Your payment is being verified. You&apos;ll be notified once it&apos;s confirmed.
@@ -92,9 +90,8 @@ export default function CustomerOrderDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Items */}
       <section className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <div className="px-4 sm:px-5 py-3 border-b border-gray-100 bg-gray-50">
           <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500">Items</h2>
         </div>
         <div className="divide-y divide-gray-50">
@@ -103,15 +100,15 @@ export default function CustomerOrderDetailPage({ params }: Props) {
             const product = variant.product as Record<string, unknown>;
             const images = product.images as Array<Record<string, unknown>>;
             return (
-              <div key={item.id as string} className="flex items-center gap-4 px-5 py-4">
+              <div key={item.id as string} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4">
                 {images?.[0] && (
-                  <img src={images[0].url as string} alt="" className="w-14 h-14 rounded object-cover" />
+                  <img src={images[0].url as string} alt="" className="w-12 h-12 sm:w-14 sm:h-14 rounded object-cover" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{String(item.productName)}</p>
+                  <p className="text-sm font-medium truncate">{String(item.productName)}</p>
                   {variant.sku ? <p className="text-xs text-gray-400">SKU: {String(variant.sku)}</p> : null}
                 </div>
-                <p className="text-sm text-gray-500">× {item.quantity as number}</p>
+                <p className="text-sm text-gray-500">x {item.quantity as number}</p>
                 <p className="text-sm font-medium">{formatPrice(item.total as number)}</p>
               </div>
             );
@@ -119,7 +116,6 @@ export default function CustomerOrderDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Summary + Address */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <section className="border border-gray-200 rounded-lg p-5">
           <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Order Summary</h2>
@@ -164,3 +160,4 @@ export default function CustomerOrderDetailPage({ params }: Props) {
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { db } from "../src/lib/db";
 import bcrypt from "bcryptjs";
 
@@ -161,7 +162,7 @@ async function main() {
     data: {
       method: "BKASH",
       accountNumber: "01XXXXXXXXX",
-      accountName: "TN Luxury",
+      accountName: "The Jewellery Bowl",
       isActive: true,
     },
   });
@@ -169,7 +170,7 @@ async function main() {
     data: {
       method: "NAGAD",
       accountNumber: "01XXXXXXXXX",
-      accountName: "TN Luxury",
+      accountName: "The Jewellery Bowl",
       isActive: true,
     },
   });
@@ -177,7 +178,7 @@ async function main() {
 
   // Create default settings
   const defaultSettings = [
-    { key: "store_name", value: JSON.stringify("TN Luxury") },
+    { key: "store_name", value: JSON.stringify("The Jewellery Bowl") },
     { key: "store_tagline", value: JSON.stringify("The Art of Elegance") },
     { key: "store_phone", value: JSON.stringify("01XXXXXXXXX") },
     { key: "store_email", value: JSON.stringify("info@tnluxury.com") },

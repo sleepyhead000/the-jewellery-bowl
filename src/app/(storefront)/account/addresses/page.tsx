@@ -69,29 +69,29 @@ export default function AddressesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold uppercase tracking-tight">Addresses</h1>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">Addresses</h1>
+        <Button size="sm" onClick={() => setShowForm(!showForm)} className="min-h-10">
           <Plus className="h-4 w-4 mr-1.5" /> Add
         </Button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="border border-gray-200 rounded-lg p-5 mb-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleCreate} className="border border-gray-200 rounded-lg p-4 sm:p-5 mb-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Label" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="Home, Office..." required />
             <Input label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" required />
           </div>
           <Input label="Street Address" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} placeholder="House #, Road #, Block..." required />
           <Input label="Area" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="Gulshan, Dhanmondi..." />
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input label="District" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} placeholder="District" required />
             <Select label="Division" value={form.division} onChange={(e) => setForm({ ...form, division: e.target.value })} required options={[{ label: "Select", value: "" }, ...DIVISIONS.map((d) => ({ label: d, value: d }))]} />
             <Input label="Postal Code" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} placeholder="1234" />
           </div>
-          <div className="flex gap-3">
-            <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Address"}</Button>
-            <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button type="submit" disabled={saving} className="min-h-11">{saving ? "Saving..." : "Save Address"}</Button>
+            <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="min-h-11">Cancel</Button>
           </div>
         </form>
       )}
@@ -104,7 +104,7 @@ export default function AddressesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`border rounded-lg p-5 relative ${addr.isDefault ? "border-black" : "border-gray-200"}`}>
+            <div key={addr.id} className={`border rounded-lg p-4 sm:p-5 relative ${addr.isDefault ? "border-black" : "border-gray-200"}`}>
               {addr.isDefault && (
                 <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider bg-black text-white px-2 py-0.5 rounded">Default</span>
               )}
@@ -119,7 +119,7 @@ export default function AddressesPage() {
                     <Star className="h-3 w-3" /> Set default
                   </button>
                 )}
-                <button onClick={() => handleDelete(addr.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 ml-auto">
+                <button onClick={() => handleDelete(addr.id)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 ml-auto">
                   <Trash2 className="h-3 w-3" /> Delete
                 </button>
               </div>
@@ -130,3 +130,4 @@ export default function AddressesPage() {
     </div>
   );
 }
+

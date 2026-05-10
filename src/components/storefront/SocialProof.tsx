@@ -64,7 +64,12 @@ export default function SocialProof() {
 
             {/* Author */}
             <div className="pt-2 border-t border-gray-50">
-              <p className="text-sm font-semibold font-display">{t.name}</p>
+              <p
+                className="text-sm font-semibold"
+                style={{ fontFamily: "'Palatino Linotype', Palatino, serif" }}
+              >
+                {t.name}
+              </p>
               <p className="text-[11px] text-gray-400 font-body">
                 {t.location} &middot; {t.product}
               </p>

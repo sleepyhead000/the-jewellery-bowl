@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import ProductCard from "@/components/storefront/ProductCard";
+import type { Prisma } from "@/generated/prisma/client";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -11,16 +12,22 @@ export default async function SearchPage({ searchParams }: Props) {
   const page = parseInt(params.page || "1");
   const limit = 20;
 
-  let products: Awaited<ReturnType<typeof db.product.findMany<{ include: { variants: { take: 1 }; images: { orderBy: { sortOrder: "asc" }; take: 1 } } }>>> = [];
+  type SearchProduct = Prisma.ProductGetPayload<{
+    include: {
+      variants: { take: 1 };
+      images: { orderBy: { sortOrder: "asc" }; take: 1 };
+    };
+  }>;
+
+  let products: SearchProduct[] = [];
   let total = 0;
 
   if (query) {
-    const where = {
+    const where: Prisma.ProductWhereInput = {
       status: "ACTIVE" as const,
       OR: [
-        { name: { contains: query, mode: "insensitive" as const } },
-        { description: { contains: query, mode: "insensitive" as const } },
-        { tags: { has: query.toLowerCase() } },
+        { name: { contains: query } },
+        { description: { contains: query } },
       ],
     };
 

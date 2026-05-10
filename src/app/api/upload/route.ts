@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { processAndSaveImage, validateFile } from "@/lib/upload";
+import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const limiter = await rateLimit(`upload:${session.user.id}`, 30, 300);
+  if (!limiter.allowed) {
+    return NextResponse.json({ error: "Too many uploads" }, { status: 429, headers: rateLimitHeaders(limiter) });
   }
 
   const formData = await req.formData();

@@ -32,7 +32,7 @@ export default function CustomerOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold uppercase tracking-tight mb-8">My Orders</h1>
+      <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight mb-6 sm:mb-8">My Orders</h1>
 
       {loading ? (
         <p className="text-gray-400 text-sm">Loading orders...</p>
@@ -43,33 +43,33 @@ export default function CustomerOrdersPage() {
           <Link href="/products" className="text-sm font-medium underline">Browse Products</Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {orders.map((order) => {
             const payment = order.payment as Record<string, unknown> | null;
             return (
               <Link
                 key={order.id as string}
                 href={`/account/orders/${order.id}`}
-                className="block bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-400 transition-colors"
+                className="block bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:border-gray-400 transition-colors"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-start sm:items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-bold">{order.orderNumber as string}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       {new Date(order.createdAt as string).toLocaleDateString()} · {(order._count as Record<string, number>)?.items ?? 0} items
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <div className="text-right">
                       <p className="text-sm font-medium">{formatPrice(order.total as number)}</p>
-                      <div className="flex gap-1.5 mt-1 justify-end">
+                      <div className="flex flex-wrap gap-1.5 mt-1 justify-end">
                         <Badge variant={STATUS_COLORS[order.status as string] || "default"} className="text-[10px]">{order.status as string}</Badge>
                         {payment && (
                           <Badge variant={PAYMENT_COLORS[payment.status as string] || "default"} className="text-[10px]">{(payment.status as string).replace("_", " ")}</Badge>
                         )}
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-300" />
+                    <ChevronRight className="h-4 w-4 text-gray-300 hidden sm:block" />
                   </div>
                 </div>
               </Link>
@@ -77,7 +77,7 @@ export default function CustomerOrdersPage() {
           })}
 
           {pagination.pages > 1 && (
-            <div className="pt-4">
+            <div className="pt-4 overflow-x-auto">
               <Pagination
                 currentPage={pagination.page}
                 totalPages={pagination.pages}
@@ -90,3 +90,4 @@ export default function CustomerOrdersPage() {
     </div>
   );
 }
+
