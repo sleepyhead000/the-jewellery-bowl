@@ -1,7 +1,10 @@
 import Hero from "@/components/storefront/Hero";
+import HomeIntroShell from "@/components/storefront/HomeIntroShell";
 import ProductCard from "@/components/storefront/ProductCard";
 import SocialProof from "@/components/storefront/SocialProof";
 import { db } from "@/lib/db";
+
+export const revalidate = 120;
 
 export default async function Home() {
     const [homepageSetting, newArrivals] = await Promise.all([
@@ -28,39 +31,30 @@ export default async function Home() {
         ? parsed.popularIds.filter((id): id is string => typeof id === "string")
         : [];
 
-    const [featuredRaw, popularRaw] = await Promise.all([
-        featuredIds.length
-            ? db.product.findMany({
-                  where: { id: { in: featuredIds }, status: "ACTIVE" },
-                  include: {
-                      variants: { where: { isActive: true }, orderBy: { price: "asc" }, take: 1 },
-                      images: { orderBy: { sortOrder: "asc" }, take: 1 },
-                  },
-              })
-            : [],
-        popularIds.length
-            ? db.product.findMany({
-                  where: { id: { in: popularIds }, status: "ACTIVE" },
-                  include: {
-                      variants: { where: { isActive: true }, orderBy: { price: "asc" }, take: 1 },
-                      images: { orderBy: { sortOrder: "asc" }, take: 1 },
-                  },
-              })
-            : [],
-    ]);
+    const selectedProductIds = Array.from(new Set([...featuredIds, ...popularIds]));
+    const selectedProducts = selectedProductIds.length
+        ? await db.product.findMany({
+              where: { id: { in: selectedProductIds }, status: "ACTIVE" },
+              include: {
+                  variants: { where: { isActive: true }, orderBy: { price: "asc" }, take: 1 },
+                  images: { orderBy: { sortOrder: "asc" }, take: 1 },
+              },
+          })
+        : [];
 
     const orderByIds = <T extends { id: string }>(items: T[], ids: string[]) =>
         ids.map((id) => items.find((x) => x.id === id)).filter((x): x is T => Boolean(x));
 
-    const featuredProducts = orderByIds(featuredRaw, featuredIds);
-    const popularProducts = orderByIds(popularRaw, popularIds);
+    const featuredProducts = orderByIds(selectedProducts, featuredIds);
+    const popularProducts = orderByIds(selectedProducts, popularIds);
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     return (
-        <div className="flex flex-col gap-16 pb-16" style={{ background: "#0d0d0d" }}>
-            <Hero />
+        <HomeIntroShell>
+            <div className="flex flex-col gap-16 pb-16" style={{ background: "#0d0d0d" }}>
+                <Hero />
 
             {/* Featured Products */}
             <section className="container mx-auto px-4 md:px-8">
@@ -251,7 +245,8 @@ export default async function Home() {
             </section>
 
             {/* Social Proof */}
-            <SocialProof />
-        </div>
+                <SocialProof />
+            </div>
+        </HomeIntroShell>
     );
 }
