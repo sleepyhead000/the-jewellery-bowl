@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { adminApiFetch, mapAdminApiError } from "@/lib/admin-api-client";
+import { useAdminCapabilities } from "@/hooks/use-admin-capabilities";
 
 export default function AdminNotificationsPage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const { can, loading: loadingCapabilities } = useAdminCapabilities();
+  const canSend = can("notifications.send");
 
   const subscribe = async () => {
+    if (!canSend) {
+      setStatus("Insufficient permission for this action.");
+      return;
+    }
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setStatus("Push notifications are not supported in this browser.");
       return;
@@ -31,19 +39,32 @@ export default function AdminNotificationsPage() {
       applicationServerKey: key,
     });
 
-    const res = await fetch("/api/push-subscriptions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub),
-    });
-    setStatus(res.ok ? "Push subscription enabled." : "Failed to save push subscription.");
+    try {
+      await adminApiFetch("/api/push-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub),
+      });
+      setStatus("Push subscription enabled.");
+    } catch (error: unknown) {
+      setStatus(mapAdminApiError(error));
+    }
   };
 
   const sendTest = async () => {
+    if (!canSend) {
+      setStatus("Insufficient permission for this action.");
+      return;
+    }
     setLoading(true);
-    const res = await fetch("/api/admin/notifications/test", { method: "POST" });
-    setLoading(false);
-    setStatus(res.ok ? "Test notification sent." : "Failed to send test notification.");
+    try {
+      await adminApiFetch("/api/admin/notifications/test", { method: "POST" });
+      setStatus("Test notification sent.");
+    } catch (error: unknown) {
+      setStatus(mapAdminApiError(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,10 +75,10 @@ export default function AdminNotificationsPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-        <button onClick={subscribe} className="w-full sm:w-auto px-4 py-2 bg-black text-white rounded-md text-sm font-semibold">
+        <button onClick={subscribe} disabled={!canSend || loadingCapabilities} className="w-full sm:w-auto px-4 py-2 bg-black text-white rounded-md text-sm font-semibold disabled:opacity-50">
           Enable Browser Push
         </button>
-        <button onClick={sendTest} disabled={loading} className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-semibold sm:ml-3">
+        <button onClick={sendTest} disabled={loading || !canSend || loadingCapabilities} className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-semibold sm:ml-3 disabled:opacity-50">
           {loading ? "Sending..." : "Send Test Notification"}
         </button>
         {status ? <p className="text-sm text-gray-700">{status}</p> : null}
@@ -65,4 +86,3 @@ export default function AdminNotificationsPage() {
     </div>
   );
 }
-

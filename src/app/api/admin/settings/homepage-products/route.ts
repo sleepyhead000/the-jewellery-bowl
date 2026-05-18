@@ -1,7 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
 const KEY = "homepage_products";
 
@@ -29,21 +28,32 @@ function normalize(input: unknown): HomepageProductsSetting {
   };
 }
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export async function GET(req: NextRequest) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:settings:homepage:get:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const setting = await db.setting.findUnique({ where: { key: KEY } });
-  return NextResponse.json(normalize(setting?.value ?? defaults));
+  return withRequestId(context.requestId, normalize(setting?.value ?? defaults));
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:settings:homepage:patch:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const body = await req.json();
   const data = normalize(body);
@@ -54,5 +64,5 @@ export async function PATCH(req: NextRequest) {
     create: { key: KEY, value: data },
   });
 
-  return NextResponse.json(data);
+  return withRequestId(context.requestId, data);
 }

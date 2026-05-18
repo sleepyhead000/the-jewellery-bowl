@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -9,10 +8,16 @@ interface RouteContext {
 
 // PATCH /api/admin/announcements/[id]
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:announcements:update:${userId ?? "anon"}`,
+    rateLimitMax: 40,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { id } = await params;
   const body = await req.json();
@@ -38,17 +43,22 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     data,
   });
 
-  return NextResponse.json(announcement);
+  return withRequestId(context.requestId, announcement);
 }
 
 // DELETE /api/admin/announcements/[id]
-export async function DELETE(_req: NextRequest, { params }: RouteContext) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export async function DELETE(req: NextRequest, { params }: RouteContext) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:announcements:delete:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { id } = await params;
   await db.announcement.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  return withRequestId(context.requestId, { success: true });
 }

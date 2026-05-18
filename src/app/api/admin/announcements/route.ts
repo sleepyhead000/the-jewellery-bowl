@@ -1,28 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
-// GET /api/admin/announcements â€” list all announcements for admin
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+// GET /api/admin/announcements — list all announcements for admin
+export async function GET(req: NextRequest) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:announcements:list:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const announcements = await db.announcement.findMany({
     orderBy: { sortOrder: "asc" },
   });
 
-  return NextResponse.json(announcements);
+  return withRequestId(context.requestId, announcements);
 }
 
-// POST /api/admin/announcements â€” create announcement
+// POST /api/admin/announcements — create announcement
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:announcements:create:${userId ?? "anon"}`,
+    rateLimitMax: 30,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const body = await req.json();
   const { text, link, isActive, sortOrder, startAt, endAt } = body as {
@@ -35,7 +45,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!text?.trim()) {
-    return NextResponse.json({ error: "Text is required" }, { status: 400 });
+    return validationError(context.requestId, "Text is required");
   }
 
   const announcement = await db.announcement.create({
@@ -49,5 +59,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(announcement, { status: 201 });
+  return withRequestId(context.requestId, announcement, { status: 201 });
 }

@@ -1,36 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
+import { hasPermission } from "@/lib/permissions";
 
-// GET /api/coupons â€” admin: list all; customer: validate code
+// GET /api/coupons — admin: list all; customer: validate code
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    rateLimitKey: (_req, userId) => `coupons:get:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
-  const isAdmin = hasPermission(session.user.role, "settings.manage");
+  const isAdmin = context.role ? hasPermission(context.role, "settings.manage") : false;
   const { searchParams } = new URL(req.url);
 
-  // Customer: validate a coupon code
   const code = searchParams.get("code");
   if (code && !isAdmin) {
     const coupon = await db.coupon.findUnique({ where: { code: code.toUpperCase() } });
     if (!coupon || !coupon.isActive) {
-      return NextResponse.json({ error: "Invalid coupon code" }, { status: 404 });
+      return validationError(context.requestId, "Invalid coupon code");
     }
     const now = new Date();
     if (coupon.validFrom && now < coupon.validFrom) {
-      return NextResponse.json({ error: "Coupon not yet valid" }, { status: 400 });
+      return validationError(context.requestId, "Coupon not yet valid");
     }
     if (coupon.validTo && now > coupon.validTo) {
-      return NextResponse.json({ error: "Coupon expired" }, { status: 400 });
+      return validationError(context.requestId, "Coupon expired");
     }
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-      return NextResponse.json({ error: "Coupon usage limit reached" }, { status: 400 });
+      return validationError(context.requestId, "Coupon usage limit reached");
     }
-    return NextResponse.json({
+    return withRequestId(context.requestId, {
       id: coupon.id,
       code: coupon.code,
       type: coupon.type,
@@ -40,9 +42,8 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Admin: list all
   if (!isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return validationError(context.requestId, "Coupon code required");
   }
 
   const coupons = await db.coupon.findMany({
@@ -50,15 +51,21 @@ export async function GET(req: NextRequest) {
     include: { _count: { select: { orders: true } } },
   });
 
-  return NextResponse.json(coupons);
+  return withRequestId(context.requestId, coupons);
 }
 
-// POST /api/coupons â€” admin: create
+// POST /api/coupons — admin: create
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `coupons:create:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const body = await req.json();
   const { code, type, value, minOrderAmount, maxDiscount, usageLimit, validFrom, validTo } = body as {
@@ -73,7 +80,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!code || !type || !value) {
-    return NextResponse.json({ error: "code, type, and value required" }, { status: 400 });
+    return validationError(context.requestId, "code, type, and value required");
   }
 
   const coupon = await db.coupon.create({
@@ -88,15 +95,18 @@ export async function POST(req: NextRequest) {
       validTo: validTo ? new Date(validTo) : null,
     },
   });
-  await db.auditLog.create({
-    data: {
-      userId: session.user.id,
-      action: "COUPON_CREATED",
-      entity: "COUPON",
-      entityId: coupon.id,
-      details: { code: coupon.code, type: coupon.type, value: coupon.value },
-    },
-  });
 
-  return NextResponse.json(coupon, { status: 201 });
+  if (context.userId) {
+    await db.auditLog.create({
+      data: {
+        userId: context.userId,
+        action: "COUPON_CREATED",
+        entity: "COUPON",
+        entityId: coupon.id,
+        details: { code: coupon.code, type: coupon.type, value: coupon.value, requestId: context.requestId },
+      },
+    });
+  }
+
+  return withRequestId(context.requestId, coupon, { status: 201 });
 }

@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
 const HERO_SETTING_KEY = "hero_content";
 
@@ -55,22 +54,33 @@ function normalizeHeroSettings(input: unknown) {
   };
 }
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export async function GET(req: NextRequest) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:settings:hero:get:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const record = await db.setting.findUnique({ where: { key: HERO_SETTING_KEY } });
   const value = record?.value ?? defaultHeroSettings;
-  return NextResponse.json(normalizeHeroSettings(value));
+  return withRequestId(context.requestId, normalizeHeroSettings(value));
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:settings:hero:patch:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const body = await req.json();
   const settings = normalizeHeroSettings(body);
@@ -87,7 +97,7 @@ export async function PATCH(req: NextRequest) {
     !settings.secondaryCtaHref ||
     settings.trustItems.length !== 3
   ) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return validationError(context.requestId, "Invalid payload");
   }
 
   await db.setting.upsert({
@@ -96,5 +106,5 @@ export async function PATCH(req: NextRequest) {
     create: { key: HERO_SETTING_KEY, value: settings },
   });
 
-  return NextResponse.json(settings);
+  return withRequestId(context.requestId, settings);
 }

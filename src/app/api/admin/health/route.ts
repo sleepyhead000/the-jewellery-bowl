@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "orders.view")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export async function GET(req: NextRequest) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "orders.view",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:health:${userId ?? "anon"}`,
+    rateLimitMax: 30,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const checks: Record<string, string> = {
     database: "ok",
@@ -29,10 +33,9 @@ export async function GET() {
     checks.redis = "error";
   }
 
-  return NextResponse.json({
+  return withRequestId(context.requestId, {
     status: Object.values(checks).includes("error") ? "degraded" : "ok",
     checks,
     timestamp: new Date().toISOString(),
   });
 }
-

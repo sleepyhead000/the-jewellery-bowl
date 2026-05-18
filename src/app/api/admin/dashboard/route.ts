@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
 // GET /api/admin/dashboard
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "orders.view")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+export async function GET(req: NextRequest) {
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "orders.view",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:dashboard:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -56,7 +60,7 @@ export async function GET() {
     }),
   ]);
 
-  return NextResponse.json({
+  return withRequestId(context.requestId, {
     stats: {
       todayRevenue: todayRevenue._sum.total || 0,
       todayOrders,

@@ -1,36 +1,60 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { hasPermission } from "@/lib/permissions";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
-// GET /api/payment-accounts â€” public (active only) or admin (all)
-export async function GET() {
-  const session = await auth();
-  const isAdmin = session?.user && hasPermission(session.user.role, "settings.manage");
+// GET /api/payment-accounts — public (active only) or admin (all)
+export async function GET(req: NextRequest) {
+  const { context } = await runSecurityChecks(req, {
+    authMode: "public",
+    rateLimitKey: () => "payment-accounts:get:public",
+    rateLimitMax: 120,
+    rateLimitWindowSeconds: 300,
+  });
+
+  const isAdmin = context.role ? hasPermission(context.role, "settings.manage") : false;
 
   const accounts = await db.paymentAccount.findMany({
     where: isAdmin ? {} : { isActive: true },
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json(accounts);
+  if (isAdmin) {
+    return withRequestId(context.requestId, accounts);
+  }
+
+  const publicAccounts = accounts.map((account) => ({
+    id: account.id,
+    method: account.method,
+    accountNumber: account.accountNumber,
+    accountName: account.accountName,
+    isActive: account.isActive,
+  }));
+
+  return withRequestId(context.requestId, publicAccounts);
 }
 
-// POST /api/payment-accounts â€” admin only
+// POST /api/payment-accounts — admin only
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "settings.manage")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "settings.manage",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `payment-accounts:create:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { method, accountNumber, accountName } = await req.json();
   if (!method || !accountNumber) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    return validationError(context.requestId, "Missing fields");
   }
 
   const account = await db.paymentAccount.create({
     data: { method, accountNumber, accountName },
   });
 
-  return NextResponse.json(account, { status: 201 });
+  return withRequestId(context.requestId, account, { status: 201 });
 }

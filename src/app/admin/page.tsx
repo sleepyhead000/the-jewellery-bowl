@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Package, ShoppingCart, Users, DollarSign, AlertTriangle, TrendingUp, CreditCard, Clock } from "lucide-react";
 import { Badge } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
+import { adminApiFetch, mapAdminApiError } from "@/lib/admin-api-client";
 
 interface DashboardData {
   stats: {
@@ -39,11 +40,21 @@ const STATUS_COLORS: Record<string, "default" | "success" | "warning" | "danger"
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/dashboard").then((r) => r.json()).then(setData);
+    adminApiFetch<DashboardData>("/api/admin/dashboard")
+      .then((result) => {
+        setData(result);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        setError(mapAdminApiError(err));
+        setData(null);
+      });
   }, []);
 
+  if (error) return <div className="text-red-500 text-sm p-6">{error}</div>;
   if (!data) return <div className="text-gray-400 text-sm p-6">Loading dashboard...</div>;
 
   const { stats, lowStockVariants, recentOrders } = data;

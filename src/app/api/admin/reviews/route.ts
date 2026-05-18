@@ -1,14 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
-// GET /api/admin/reviews â€” list reviews for admin with filter
+// GET /api/admin/reviews — list reviews for admin with filter
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !hasPermission(session.user.role, "reviews.moderate")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "staff",
+    permission: "reviews.moderate",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `admin:reviews:list:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter") || "pending";
@@ -28,5 +32,5 @@ export async function GET(req: NextRequest) {
     take: 100,
   });
 
-  return NextResponse.json(reviews);
+  return withRequestId(context.requestId, reviews);
 }

@@ -1,4 +1,4 @@
-type Role = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
+export type Role = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
 
 export const PERMISSIONS = {
   // Product management
@@ -52,4 +52,10 @@ export function hasPermission(role: Role, permission: Permission): boolean {
 
 export function requireRole(...roles: Role[]) {
   return (userRole: Role): boolean => roles.includes(userRole);
+}
+
+export function getRolePermissions(role: Role): Permission[] {
+  return (Object.keys(PERMISSIONS) as Permission[]).filter((permission) =>
+    hasPermission(role, permission)
+  );
 }
