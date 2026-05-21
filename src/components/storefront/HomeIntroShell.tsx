@@ -14,7 +14,12 @@ function getInitialContentVisibility(): boolean {
         return false;
     }
 
-    return window.sessionStorage.getItem(INTRO_SESSION_KEY) === "1";
+    try {
+        return window.sessionStorage.getItem(INTRO_SESSION_KEY) === "1";
+    } catch (error) {
+        console.warn("home_intro_storage_read_failed", { key: INTRO_SESSION_KEY, error });
+        return true;
+    }
 }
 
 export default function HomeIntroShell({ children }: HomeIntroShellProps) {

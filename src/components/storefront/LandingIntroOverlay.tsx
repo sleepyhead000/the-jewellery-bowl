@@ -46,11 +46,20 @@ function hasSeenIntro(sessionStorageKey: string): boolean {
         return true;
     }
 
-    return window.sessionStorage.getItem(sessionStorageKey) === "1";
+    try {
+        return window.sessionStorage.getItem(sessionStorageKey) === "1";
+    } catch (error) {
+        console.warn("landing_intro_storage_read_failed", { key: sessionStorageKey, error });
+        return true;
+    }
 }
 
 function markIntroSeen(sessionStorageKey: string): void {
-    window.sessionStorage.setItem(sessionStorageKey, "1");
+    try {
+        window.sessionStorage.setItem(sessionStorageKey, "1");
+    } catch (error) {
+        console.warn("landing_intro_storage_write_failed", { key: sessionStorageKey, error });
+    }
 }
 
 function getNetworkCapabilities(): NetworkCapabilities {

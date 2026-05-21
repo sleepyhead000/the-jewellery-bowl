@@ -62,7 +62,7 @@ export default function AdminSettingsPage() {
   );
 }
 
-// â”€â”€â”€ Shipping Zones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Shipping Zones
 
 function ShippingZonesSection() {
   const [zones, setZones] = useState<ShippingZone[]>([]);
@@ -186,7 +186,7 @@ function ShippingZonesSection() {
   );
 }
 
-// â”€â”€â”€ Payment Accounts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Payment Accounts
 
 function PaymentAccountsSection() {
   const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
@@ -254,7 +254,7 @@ function PaymentAccountsSection() {
               <tr key={acc.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm font-medium uppercase">{acc.method}</td>
                 <td className="px-6 py-4 text-sm font-mono">{acc.accountNumber}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{acc.accountName || "â€”"}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{acc.accountName || "-"}</td>
                 <td className="px-6 py-4 text-center">
                   <button onClick={() => toggleActive(acc.id, acc.isActive)} className={`text-xs px-3 py-1 rounded-full font-medium ${acc.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                     {acc.isActive ? "Active" : "Inactive"}

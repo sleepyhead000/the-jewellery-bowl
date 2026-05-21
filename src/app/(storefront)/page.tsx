@@ -215,7 +215,7 @@ export default async function Home() {
                     {[
                         {
                             title: "Free Shipping",
-                            body: "On all orders over ৳5,000 within Bangladesh.",
+                            body: "On all orders over BDT 5,000 within Bangladesh.",
                         },
                         {
                             title: "Premium Quality",
@@ -228,7 +228,7 @@ export default async function Home() {
                     ].map((f) => (
                         <div key={f.title} className="space-y-3">
                             <div className="text-2xl mb-2" style={{ color: "#C9A84C" }}>
-                                ✦
+                                *
                             </div>
                             <h3
                                 className="text-sm font-bold uppercase tracking-widest font-display"
@@ -250,3 +250,4 @@ export default async function Home() {
         </HomeIntroShell>
     );
 }
+

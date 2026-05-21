@@ -43,14 +43,12 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt
-     * - public files (svgs, images)
-     * - api/auth (Auth.js handles its own routes)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.svg$|.*\\.png$|api/auth).*)",
+    "/admin/:path*",
+    "/account/:path*",
+    "/checkout/:path*",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/verify/:path*",
   ],
 };
