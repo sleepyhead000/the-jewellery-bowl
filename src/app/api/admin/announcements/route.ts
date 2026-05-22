@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
-// GET /api/admin/announcements — list all announcements for admin
+// GET /api/admin/announcements â€” list all announcements for admin
 export async function GET(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   return withRequestId(context.requestId, announcements);
 }
 
-// POST /api/admin/announcements — create announcement
+// POST /api/admin/announcements â€” create announcement
 export async function POST(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
-// GET /api/admin/reviews — list reviews for admin with filter
+// GET /api/admin/reviews â€” list reviews for admin with filter
 export async function GET(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",

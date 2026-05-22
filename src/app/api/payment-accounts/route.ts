@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions";
 import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
-// GET /api/payment-accounts — public (active only) or admin (all)
+// GET /api/payment-accounts â€” public (active only) or admin (all)
 export async function GET(req: NextRequest) {
   const { context } = await runSecurityChecks(req, {
     authMode: "public",
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   return withRequestId(context.requestId, publicAccounts);
 }
 
-// POST /api/payment-accounts — admin only
+// POST /api/payment-accounts â€” admin only
 export async function POST(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",

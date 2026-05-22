@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
-// GET /api/shipping-zones — public
+// GET /api/shipping-zones â€” public
 export async function GET(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "public",
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   return withRequestId(context.requestId, zones);
 }
 
-// POST /api/shipping-zones — admin only
+// POST /api/shipping-zones â€” admin only
 export async function POST(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",

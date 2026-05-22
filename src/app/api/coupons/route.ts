@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 import { hasPermission } from "@/lib/permissions";
 
-// GET /api/coupons — admin: list all; customer: validate code
+// GET /api/coupons â€” admin: list all; customer: validate code
 export async function GET(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "authenticated",
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   return withRequestId(context.requestId, coupons);
 }
 
-// POST /api/coupons — admin: create
+// POST /api/coupons â€” admin: create
 export async function POST(req: NextRequest) {
   const { context, error } = await runSecurityChecks(req, {
     authMode: "staff",
