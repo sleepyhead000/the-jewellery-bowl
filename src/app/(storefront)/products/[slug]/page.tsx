@@ -8,6 +8,11 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+const normalizeTags = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0);
+};
+
 const getVariantDisplayName = (attributes: unknown, index: number): string => {
   if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) {
     return `Variant ${index + 1}`;
@@ -49,7 +54,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
-  const tags: string[] = product.tags;
+  const tags = normalizeTags(product.tags);
 
   const relatedProducts = await db.product.findMany({
     where: {
