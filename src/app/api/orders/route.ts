@@ -20,6 +20,11 @@ const checkoutSchema = z.object({
   notes: z.string().optional(),
 });
 
+const normalizeDivisionList = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0);
+};
+
 // GET /api/orders — customer sees own orders, admin sees all
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -147,7 +152,8 @@ export async function POST(req: NextRequest) {
   // Calculate shipping
   const shippingZones = await db.shippingZone.findMany();
   const matchedZone = shippingZones.find((z) => {
-    return z.divisions.some((d: string) => d.toLowerCase() === address.division.toLowerCase());
+    const divisions = normalizeDivisionList(z.divisions);
+    return divisions.some((d) => d.toLowerCase() === address.division.toLowerCase());
   });
   const shippingCost = matchedZone?.flatRate ?? 0;
 
