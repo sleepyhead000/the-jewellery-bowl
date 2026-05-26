@@ -1,6 +1,7 @@
 import HomeIntroShell from "@/components/storefront/HomeIntroShell";
 import HomepageDesign from "@/components/storefront/HomepageDesign";
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import {
     defaultHomepageDiscountMerch,
     defaultHomepageHeroSlides,
@@ -14,6 +15,10 @@ import {
 } from "@/lib/homepage-config";
 
 export const revalidate = 120;
+
+const isMissingTableError = (error: unknown): boolean => {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021";
+};
 
 type HomepageProduct = {
     id: string;
@@ -130,55 +135,78 @@ async function resolveProductsForSection(
 }
 
 export default async function Home() {
-    const [layoutSetting, slidesSetting, translationsSetting, discountMerchSetting] = await Promise.all([
-        db.setting.findUnique({ where: { key: "homepage_layout_v1" } }),
-        db.setting.findUnique({ where: { key: "homepage_hero_slides" } }),
-        db.setting.findUnique({ where: { key: "homepage_translations" } }),
-        db.setting.findUnique({ where: { key: "homepage_discount_merch" } }),
-    ]);
+    try {
+        const [layoutSetting, slidesSetting, translationsSetting, discountMerchSetting] = await Promise.all([
+            db.setting.findUnique({ where: { key: "homepage_layout_v1" } }),
+            db.setting.findUnique({ where: { key: "homepage_hero_slides" } }),
+            db.setting.findUnique({ where: { key: "homepage_translations" } }),
+            db.setting.findUnique({ where: { key: "homepage_discount_merch" } }),
+        ]);
 
-    const layoutConfig = normalizeHomepageLayoutConfig(layoutSetting?.value ?? defaultHomepageLayoutConfig);
-    const heroConfig = normalizeHomepageHeroSlidesConfig(slidesSetting?.value ?? defaultHomepageHeroSlides);
-    const translations = normalizeHomepageTranslations(translationsSetting?.value ?? defaultHomepageTranslations);
-    const discountMerch = normalizeHomepageDiscountMerch(discountMerchSetting?.value ?? defaultHomepageDiscountMerch);
+        const layoutConfig = normalizeHomepageLayoutConfig(layoutSetting?.value ?? defaultHomepageLayoutConfig);
+        const heroConfig = normalizeHomepageHeroSlidesConfig(slidesSetting?.value ?? defaultHomepageHeroSlides);
+        const translations = normalizeHomepageTranslations(translationsSetting?.value ?? defaultHomepageTranslations);
+        const discountMerch = normalizeHomepageDiscountMerch(discountMerchSetting?.value ?? defaultHomepageDiscountMerch);
 
-    const enabledSections = layoutConfig.sections.filter((section) => section.enabled);
-    const productsBySectionEntries = await Promise.all(
-        enabledSections.map(
-            async (section) =>
-                [section.id, await resolveProductsForSection(section, discountMerch.pinnedProductIds)] as const
-        )
-    );
-    const productsBySection = Object.fromEntries(productsBySectionEntries);
-    const sectionHasProducts = (sectionId: string) => (productsBySection[sectionId] ?? []).length > 0;
-    const cleanedLayoutConfig = {
-        ...layoutConfig,
-        sections: layoutConfig.sections.map((section) => {
-            if (!section.enabled) return section;
-            if (["featured", "new_arrivals", "popular", "offers", "category_highlights"].includes(section.type)) {
-                if (!sectionHasProducts(section.id)) return { ...section, enabled: false };
-            }
-            if (section.type === "promo_spotlight") {
-                const hasCoreContent =
-                    section.imageUrl.trim().length > 0 &&
-                    section.title.en.trim().length > 0 &&
-                    section.title.bn.trim().length > 0 &&
-                    section.subtitle.en.trim().length > 0 &&
-                    section.subtitle.bn.trim().length > 0;
-                if (!hasCoreContent) return { ...section, enabled: false };
-            }
-            return section;
-        }),
-    };
+        const enabledSections = layoutConfig.sections.filter((section) => section.enabled);
+        const productsBySectionEntries = await Promise.all(
+            enabledSections.map(
+                async (section) =>
+                    [section.id, await resolveProductsForSection(section, discountMerch.pinnedProductIds)] as const
+            )
+        );
+        const productsBySection = Object.fromEntries(productsBySectionEntries);
+        const sectionHasProducts = (sectionId: string) => (productsBySection[sectionId] ?? []).length > 0;
+        const cleanedLayoutConfig = {
+            ...layoutConfig,
+            sections: layoutConfig.sections.map((section) => {
+                if (!section.enabled) return section;
+                if (["featured", "new_arrivals", "popular", "offers", "category_highlights"].includes(section.type)) {
+                    if (!sectionHasProducts(section.id)) return { ...section, enabled: false };
+                }
+                if (section.type === "promo_spotlight") {
+                    const hasCoreContent =
+                        section.imageUrl.trim().length > 0 &&
+                        section.title.en.trim().length > 0 &&
+                        section.title.bn.trim().length > 0 &&
+                        section.subtitle.en.trim().length > 0 &&
+                        section.subtitle.bn.trim().length > 0;
+                    if (!hasCoreContent) return { ...section, enabled: false };
+                }
+                return section;
+            }),
+        };
 
-    return (
+        return (
+            <HomeIntroShell>
+                <HomepageDesign
+                    heroConfig={heroConfig}
+                    layoutConfig={cleanedLayoutConfig}
+                    translations={translations}
+                    productsBySection={productsBySection}
+                />
+            </HomeIntroShell>
+        );
+    } catch (error) {
+        if (!isMissingTableError(error)) {
+            throw error;
+        }
+
+        const fallbackLayout = normalizeHomepageLayoutConfig(defaultHomepageLayoutConfig);
+        const fallbackTranslations = normalizeHomepageTranslations(defaultHomepageTranslations);
+        const fallbackHero = normalizeHomepageHeroSlidesConfig(defaultHomepageHeroSlides);
+        const disabledLayout = {
+            ...fallbackLayout,
+            sections: fallbackLayout.sections.map((section) => ({ ...section, enabled: false })),
+        };
+
         <HomeIntroShell>
             <HomepageDesign
-                heroConfig={heroConfig}
-                layoutConfig={cleanedLayoutConfig}
-                translations={translations}
-                productsBySection={productsBySection}
+                heroConfig={fallbackHero}
+                layoutConfig={disabledLayout}
+                translations={fallbackTranslations}
+                productsBySection={{}}
             />
         </HomeIntroShell>
-    );
+    }
 }
