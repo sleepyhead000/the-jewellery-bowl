@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { validatePasswordStrength } from "@/lib/password";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/api-security";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -13,8 +14,7 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const forwarded = req.headers.get("x-forwarded-for") || "unknown";
-  const ip = forwarded.split(",")[0]?.trim() || "unknown";
+  const ip = getClientIp(req);
   const limit = await rateLimit(`auth:register:${ip}`, 5, 600);
   if (!limit.allowed) {
     return NextResponse.json(
@@ -39,8 +39,14 @@ export async function POST(req: NextRequest) {
     finalEmail ? db.user.findUnique({ where: { email: finalEmail } }) : Promise.resolve(null),
   ]);
 
-  if (phoneExists) return NextResponse.json({ error: "Phone already in use" }, { status: 409 });
-  if (emailExists) return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+  if (phoneExists || emailExists) {
+    console.warn("[register] duplicate identity attempted", {
+      hasPhoneConflict: Boolean(phoneExists),
+      hasEmailConflict: Boolean(emailExists),
+      ip,
+    });
+    return NextResponse.json({ error: "Unable to register with provided details" }, { status: 409 });
+  }
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await db.user.create({
@@ -56,4 +62,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ user }, { status: 201 });
 }
-

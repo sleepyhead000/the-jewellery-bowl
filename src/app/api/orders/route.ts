@@ -6,6 +6,7 @@ import { generateOrderNumber } from "@/lib/utils";
 import { notifyPaymentSubmitted } from "@/lib/discord";
 import { sendAdminPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { validateOriginForMutations } from "@/lib/api-security";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -63,6 +64,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Please log in" }, { status: 401 });
   }
+  const originErr = validateOriginForMutations(req, crypto.randomUUID());
+  if (originErr) return originErr;
   const limiter = await rateLimit(`orders:create:${session.user.id}`, 6, 300);
   if (!limiter.allowed) {
     return NextResponse.json(

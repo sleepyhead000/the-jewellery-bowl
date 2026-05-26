@@ -6,13 +6,13 @@ import { subscribeNewsletter } from "@/app/actions/newsletter";
 import { useState, useTransition } from "react";
 
 const B = {
-    bg:     "#000000",
-    surface:"#0d0d0d",
-    brand:  "#8B1A1A",
-    gold:   "#C9A84C",
-    text:   "#E8D9B0",
-    muted:  "#7a6e58",
-    border: "rgba(201,168,76,0.18)",
+    bg: "var(--color-surface)",
+    surface: "var(--color-surface)",
+    brand: "var(--color-accent)",
+    gold: "var(--color-accent)",
+    text: "var(--color-text-primary)",
+    muted: "var(--color-text-secondary)",
+    border: "var(--color-border)",
 };
 
 function FooterAccordion({ title, children }: { title: string; children: React.ReactNode }) {

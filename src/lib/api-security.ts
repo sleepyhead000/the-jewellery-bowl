@@ -37,6 +37,17 @@ export interface ApiSecurityContext {
   userId: string | null;
 }
 
+export function getClientIp(req: NextRequest): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    const candidate = forwardedFor.split(",")[0]?.trim();
+    if (candidate) return candidate;
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp && realIp.trim().length > 0) return realIp.trim();
+  return "unknown";
+}
+
 function buildErrorResponse(
   status: number,
   requestId: string,

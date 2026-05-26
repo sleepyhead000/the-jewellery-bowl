@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
 // GET /api/reviews?productId=xxx
 export async function GET(req: NextRequest) {
@@ -31,10 +31,15 @@ export async function GET(req: NextRequest) {
 
 // POST /api/reviews — submit review
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `reviews:post:${userId ?? "anon"}`,
+    rateLimitMax: 20,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { productId, rating, comment } = (await req.json()) as {
     productId: string;
@@ -43,13 +48,13 @@ export async function POST(req: NextRequest) {
   };
 
   if (!productId || !rating || rating < 1 || rating > 5) {
-    return NextResponse.json({ error: "productId and rating (1-5) required" }, { status: 400 });
+    return validationError(context.requestId, "productId and rating (1-5) required");
   }
 
   // Check if user has purchased this product
   const hasPurchased = await db.orderItem.findFirst({
     where: {
-      order: { userId: session.user.id, status: "DELIVERED" },
+      order: { userId: context.userId!, status: "DELIVERED" },
       variant: { productId },
     },
   });
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   // Check existing review
   const existing = await db.review.findUnique({
-    where: { productId_userId: { productId, userId: session.user.id } },
+    where: { productId_userId: { productId, userId: context.userId! } },
   });
 
   if (existing) {
@@ -74,11 +79,11 @@ export async function POST(req: NextRequest) {
   const review = await db.review.create({
     data: {
       productId,
-      userId: session.user.id,
+      userId: context.userId!,
       rating,
       comment: comment?.trim() || null,
     },
   });
 
-  return NextResponse.json(review, { status: 201 });
+  return withRequestId(context.requestId, review, { status: 201 });
 }

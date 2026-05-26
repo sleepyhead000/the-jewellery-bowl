@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { runSecurityChecks, withRequestId } from "@/lib/api-security";
 
 // GET /api/notifications
 export async function GET(req: NextRequest) {
@@ -32,24 +33,29 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/notifications — mark as read
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `notifications:patch:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { ids, all } = (await req.json()) as { ids?: string[]; all?: boolean };
 
   if (all) {
     await db.notification.updateMany({
-      where: { userId: session.user.id, isRead: false },
+      where: { userId: context.userId!, isRead: false },
       data: { isRead: true },
     });
   } else if (ids?.length) {
     await db.notification.updateMany({
-      where: { id: { in: ids }, userId: session.user.id },
+      where: { id: { in: ids }, userId: context.userId! },
       data: { isRead: true },
     });
   }
 
-  return NextResponse.json({ success: true });
+  return withRequestId(context.requestId, { success: true });
 }

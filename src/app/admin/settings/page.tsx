@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, Truck, CreditCard } from "lucide-react";
 import { Button, Input, Modal, Tabs, Textarea } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
+import type {
+  HomepageHeroSlidesConfig,
+  HomepageLayoutConfig,
+  HomepageTranslationsConfig,
+  HomepageTopbarModeConfig,
+  HomepageDiscountMerchConfig,
+} from "@/lib/homepage-config";
 
 interface ShippingZone {
   id: string;
@@ -50,12 +57,11 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold uppercase tracking-tight">Settings</h1>
-      <Tabs
+        <Tabs
         tabs={[
           { id: "shipping", label: "Shipping Zones", content: <ShippingZonesSection /> },
           { id: "payments", label: "Payment Accounts", content: <PaymentAccountsSection /> },
-          { id: "hero", label: "Hero", content: <HeroSettingsSection /> },
-          { id: "homepage-products", label: "Homepage Products", content: <HomepageProductsSection /> },
+          { id: "homepage-design", label: "Homepage Design", content: <HomepageDesignSettingsSection /> },
         ]}
       />
     </div>
@@ -500,6 +506,688 @@ function HomepageProductsSection() {
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Homepage Products"}</Button>
+        {message && <p className="text-sm text-gray-600">{message}</p>}
+      </div>
+    </form>
+  );
+}
+
+function HomepageDesignSettingsSection() {
+  const [layout, setLayout] = useState<HomepageLayoutConfig | null>(null);
+  const [slides, setSlides] = useState<HomepageHeroSlidesConfig | null>(null);
+  const [translations, setTranslations] = useState<HomepageTranslationsConfig | null>(null);
+  const [topbarMode, setTopbarMode] = useState<HomepageTopbarModeConfig | null>(null);
+  const [discountMerch, setDiscountMerch] = useState<HomepageDiscountMerchConfig | null>(null);
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingHeroSlideIndex, setUploadingHeroSlideIndex] = useState<number | null>(null);
+  const [uploadingSectionImageId, setUploadingSectionImageId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
+    const [layoutRes, slidesRes, translationsRes, topbarRes, discountRes, productsRes] = await Promise.all([
+      fetch("/api/admin/settings/homepage-layout"),
+      fetch("/api/admin/settings/homepage-hero-slides"),
+      fetch("/api/admin/settings/homepage-translations"),
+      fetch("/api/admin/settings/homepage-topbar-mode"),
+      fetch("/api/admin/settings/homepage-discount-merch"),
+      fetch("/api/products?status=ACTIVE&limit=200"),
+    ]);
+
+    const [layoutData, slidesData, translationsData, topbarData, discountData, productsData] = await Promise.all([
+      layoutRes.json(),
+      slidesRes.json(),
+      translationsRes.json(),
+      topbarRes.json(),
+      discountRes.json(),
+      productsRes.json(),
+    ]);
+
+    setLayout(layoutData);
+    setSlides(slidesData);
+    setTranslations(translationsData);
+    setTopbarMode(topbarData);
+    setDiscountMerch(discountData);
+    setProducts(Array.isArray(productsData.products) ? productsData.products : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+
+    if (!layout || !slides || !translations || !topbarMode || !discountMerch) {
+      setSaving(false);
+      setMessage("Settings are not loaded yet.");
+      return;
+    }
+    if (slides.slides.length === 0) {
+      setSaving(false);
+      setMessage("At least one hero slide is required.");
+      return;
+    }
+
+    const responses = await Promise.all([
+      fetch("/api/admin/settings/homepage-layout", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(layout),
+      }),
+      fetch("/api/admin/settings/homepage-hero-slides", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(slides),
+      }),
+      fetch("/api/admin/settings/homepage-translations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(translations),
+      }),
+      fetch("/api/admin/settings/homepage-topbar-mode", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(topbarMode),
+      }),
+      fetch("/api/admin/settings/homepage-discount-merch", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(discountMerch),
+      }),
+    ]);
+
+    if (responses.some((response) => !response.ok)) {
+      setSaving(false);
+      setMessage("Failed to save one or more homepage design payloads.");
+      return;
+    }
+
+    setSaving(false);
+    setMessage("Homepage design settings saved.");
+    fetchData();
+  };
+
+  if (loading) return <p className="text-sm text-gray-500">Loading homepage design settings...</p>;
+  if (!layout || !slides || !translations || !topbarMode || !discountMerch) {
+    return <p className="text-sm text-gray-500">Homepage settings are unavailable.</p>;
+  }
+
+  const togglePinnedDiscount = (id: string) => {
+    setDiscountMerch((prev) =>
+      prev
+        ? {
+            ...prev,
+            pinnedProductIds: prev.pinnedProductIds.includes(id)
+              ? prev.pinnedProductIds.filter((x) => x !== id)
+              : [...prev.pinnedProductIds, id],
+          }
+        : prev
+    );
+  };
+
+  const moveSection = (sectionId: string, direction: "up" | "down") => {
+    setLayout((prev) => {
+      if (!prev) return prev;
+      const order = [...prev.sectionOrder];
+      const currentIndex = order.indexOf(sectionId);
+      if (currentIndex < 0) return prev;
+      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= order.length) return prev;
+      const temp = order[currentIndex];
+      order[currentIndex] = order[targetIndex];
+      order[targetIndex] = temp;
+      return { ...prev, sectionOrder: order };
+    });
+  };
+
+  const uploadSectionImage = async (sectionId: string, file: File) => {
+    setUploadingSectionImageId(sectionId);
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage("Section image upload failed.");
+        return;
+      }
+
+      const uploaded = Array.isArray(data.uploaded) ? data.uploaded : [];
+      const first = uploaded[0] as { urls?: { large?: string; medium?: string } } | undefined;
+      const nextUrl = first?.urls?.large ?? first?.urls?.medium;
+
+      if (!nextUrl) {
+        setMessage("Section image upload completed but no usable URL was returned.");
+        return;
+      }
+
+      setLayout((prev) =>
+        prev
+          ? {
+              ...prev,
+              sections: prev.sections.map((entry) =>
+                entry.id === sectionId ? { ...entry, imageUrl: nextUrl } : entry
+              ),
+            }
+          : prev
+      );
+      setMessage("Section image uploaded.");
+    } catch {
+      setMessage("Section image upload failed.");
+    } finally {
+      setUploadingSectionImageId(null);
+    }
+  };
+
+  const uploadHeroImage = async (slideIndex: number, file: File) => {
+    setUploadingHeroSlideIndex(slideIndex);
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage("Hero image upload failed.");
+        return;
+      }
+
+      const uploaded = Array.isArray(data.uploaded) ? data.uploaded : [];
+      const first = uploaded[0] as { urls?: { large?: string; medium?: string } } | undefined;
+      const nextUrl = first?.urls?.large ?? first?.urls?.medium;
+
+      if (!nextUrl) {
+        setMessage("Hero image upload completed but no usable URL was returned.");
+        return;
+      }
+
+      setSlides((prev) =>
+        prev
+          ? {
+              ...prev,
+              slides: prev.slides.map((entry, i) => (i === slideIndex ? { ...entry, imageUrl: nextUrl } : entry)),
+            }
+          : prev
+      );
+      setMessage("Hero image uploaded.");
+    } catch {
+      setMessage("Hero image upload failed.");
+    } finally {
+      setUploadingHeroSlideIndex(null);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSave} className="space-y-6">
+      <p className="text-sm text-gray-500">
+        Manage homepage sections, top bar content, hero slides, translations, and discount merchandising from structured controls.
+      </p>
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Top Bar Source</h3>
+        <div className="flex gap-4">
+          <label className="text-sm flex items-center gap-2">
+            <input
+              type="radio"
+              checked={topbarMode.mode === "static"}
+              onChange={() => setTopbarMode((prev) => (prev ? { ...prev, mode: "static" } : prev))}
+            />
+            Static message
+          </label>
+          <label className="text-sm flex items-center gap-2">
+            <input
+              type="radio"
+              checked={topbarMode.mode === "announcements"}
+              onChange={() => setTopbarMode((prev) => (prev ? { ...prev, mode: "announcements" } : prev))}
+            />
+            Announcements
+          </label>
+        </div>
+        <label className="text-sm flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={topbarMode.enabled}
+            onChange={(e) => setTopbarMode((prev) => (prev ? { ...prev, enabled: e.target.checked } : prev))}
+          />
+          Top bar enabled
+        </label>
+        {topbarMode.mode === "static" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              label="Static Text (EN)"
+              value={topbarMode.staticText.en}
+              onChange={(e) =>
+                setTopbarMode((prev) =>
+                  prev ? { ...prev, staticText: { ...prev.staticText, en: e.target.value } } : prev
+                )
+              }
+            />
+            <Input
+              label="Static Text (BN)"
+              value={topbarMode.staticText.bn}
+              onChange={(e) =>
+                setTopbarMode((prev) =>
+                  prev ? { ...prev, staticText: { ...prev.staticText, bn: e.target.value } } : prev
+                )
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Hero Slides</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Input
+            label="Autoplay (ms)"
+            type="number"
+            value={String(slides.autoplayMs)}
+            onChange={(e) =>
+              setSlides((prev) => (prev ? { ...prev, autoplayMs: parseInt(e.target.value) || 4500 } : prev))
+            }
+          />
+        </div>
+        {slides.slides.map((slide, index) => (
+          <div key={slide.id} className="border border-gray-100 rounded p-3 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wide">Slide {index + 1}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Kicker (EN)"
+                value={slide.kicker.en}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, kicker: { ...entry.kicker, en: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Kicker (BN)"
+                value={slide.kicker.bn}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, kicker: { ...entry.kicker, bn: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Heading Prefix (EN)"
+                value={slide.headingPrefix.en}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, headingPrefix: { ...entry.headingPrefix, en: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Heading Prefix (BN)"
+                value={slide.headingPrefix.bn}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, headingPrefix: { ...entry.headingPrefix, bn: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Heading Accent (EN)"
+                value={slide.headingAccent.en}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, headingAccent: { ...entry.headingAccent, en: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Heading Accent (BN)"
+                value={slide.headingAccent.bn}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, headingAccent: { ...entry.headingAccent, bn: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="CTA Label (EN)"
+                value={slide.ctaLabel.en}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, ctaLabel: { ...entry.ctaLabel, en: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="CTA Label (BN)"
+                value={slide.ctaLabel.bn}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, ctaLabel: { ...entry.ctaLabel, bn: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="CTA URL"
+                value={slide.ctaHref}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) => (i === index ? { ...entry, ctaHref: e.target.value } : entry)),
+                        }
+                      : prev
+                  )
+                }
+              />
+              <Input
+                label="Image URL"
+                value={slide.imageUrl}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) => (i === index ? { ...entry, imageUrl: e.target.value } : entry)),
+                        }
+                      : prev
+                  )
+                }
+              />
+              {slide.imageUrl.trim().length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wide">Image Preview</p>
+                  <div className="w-full max-w-[260px] aspect-[4/5] border border-gray-200 bg-gray-50 overflow-hidden rounded">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={slide.imageUrl} alt={`Hero slide ${index + 1} preview`} className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wide">Upload Hero Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      uploadHeroImage(index, file);
+                    }
+                    e.target.value = "";
+                  }}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm"
+                />
+                {uploadingHeroSlideIndex === index && (
+                  <p className="text-xs text-gray-500">Uploading hero image...</p>
+                )}
+              </div>
+              <Textarea
+                label="Description (EN)"
+                value={slide.description.en}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, description: { ...entry.description, en: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+                rows={3}
+              />
+              <Textarea
+                label="Description (BN)"
+                value={slide.description.bn}
+                onChange={(e) =>
+                  setSlides((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          slides: prev.slides.map((entry, i) =>
+                            i === index ? { ...entry, description: { ...entry.description, bn: e.target.value } } : entry
+                          ),
+                        }
+                      : prev
+                  )
+                }
+                rows={3}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Homepage Sections</h3>
+        {layout.sectionOrder.map((sectionId) => {
+          const section = layout.sections.find((entry) => entry.id === sectionId);
+          if (!section) return null;
+          return (
+            <div key={section.id} className="border border-gray-100 rounded p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wide">{section.id}</p>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => moveSection(section.id, "up")} className="text-xs border px-2 py-1">Up</button>
+                  <button type="button" onClick={() => moveSection(section.id, "down")} className="text-xs border px-2 py-1">Down</button>
+                  <label className="text-xs flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={section.enabled}
+                      onChange={(e) =>
+                        setLayout((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                sections: prev.sections.map((entry) =>
+                                  entry.id === section.id ? { ...entry, enabled: e.target.checked } : entry
+                                ),
+                              }
+                            : prev
+                        )
+                      }
+                    />
+                    Enabled
+                  </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Input
+                  label="Title (EN)"
+                  value={section.title.en}
+                  onChange={(e) =>
+                    setLayout((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            sections: prev.sections.map((entry) =>
+                              entry.id === section.id ? { ...entry, title: { ...entry.title, en: e.target.value } } : entry
+                            ),
+                          }
+                        : prev
+                    )
+                  }
+                />
+                <Input
+                  label="Title (BN)"
+                  value={section.title.bn}
+                  onChange={(e) =>
+                    setLayout((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            sections: prev.sections.map((entry) =>
+                              entry.id === section.id ? { ...entry, title: { ...entry.title, bn: e.target.value } } : entry
+                            ),
+                          }
+                        : prev
+                    )
+                  }
+                />
+                <Input
+                  label="Limit"
+                  type="number"
+                  value={String(section.limit)}
+                  onChange={(e) =>
+                    setLayout((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            sections: prev.sections.map((entry) =>
+                              entry.id === section.id ? { ...entry, limit: parseInt(e.target.value) || 1 } : entry
+                            ),
+                          }
+                        : prev
+                    )
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wide">Upload Section Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        uploadSectionImage(section.id, file);
+                      }
+                      e.target.value = "";
+                    }}
+                    className="w-full border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  {uploadingSectionImageId === section.id && (
+                    <p className="text-xs text-gray-500">Uploading section image...</p>
+                  )}
+                </div>
+                {section.imageUrl.trim().length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wide">Image Preview</p>
+                    <div className="w-full max-w-[220px] aspect-square border border-gray-200 bg-gray-50 overflow-hidden rounded">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={section.imageUrl} alt={`${section.id} preview`} className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Discount Section Pinning</h3>
+        <p className="text-xs text-gray-500">Pinned products appear first in auto discount sections (salePrice source of truth).</p>
+        <div className="max-h-72 overflow-auto border border-gray-200 rounded-lg p-3 space-y-2">
+          {products.map((p) => (
+            <label key={`discount-pin-${p.id}`} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={discountMerch.pinnedProductIds.includes(p.id)}
+                onChange={() => togglePinnedDiscount(p.id)}
+              />
+              <span>{p.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Global Translations</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Input
+            label="Nav Home (EN)"
+            value={translations.navHome.en}
+            onChange={(e) => setTranslations((prev) => (prev ? { ...prev, navHome: { ...prev.navHome, en: e.target.value } } : prev))}
+          />
+          <Input
+            label="Nav Home (BN)"
+            value={translations.navHome.bn}
+            onChange={(e) => setTranslations((prev) => (prev ? { ...prev, navHome: { ...prev.navHome, bn: e.target.value } } : prev))}
+          />
+          <Input
+            label="Offers Title (EN)"
+            value={translations.offersTitle.en}
+            onChange={(e) =>
+              setTranslations((prev) => (prev ? { ...prev, offersTitle: { ...prev.offersTitle, en: e.target.value } } : prev))
+            }
+          />
+          <Input
+            label="Offers Title (BN)"
+            value={translations.offersTitle.bn}
+            onChange={(e) =>
+              setTranslations((prev) => (prev ? { ...prev, offersTitle: { ...prev.offersTitle, bn: e.target.value } } : prev))
+            }
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Homepage Design"}</Button>
         {message && <p className="text-sm text-gray-600">{message}</p>}
       </div>
     </form>

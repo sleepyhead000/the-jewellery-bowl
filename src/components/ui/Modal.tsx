@@ -49,11 +49,14 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className={`w-full ${sizes[size]} bg-white shadow-xl animate-in fade-in`}>
+      <div
+        className={`w-full ${sizes[size]} shadow-xl animate-in fade-in`}
+        style={{ background: "var(--color-elevated)", color: "var(--color-text-primary)" }}
+      >
         {title && (
-          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div className="flex items-center justify-between border-b px-6 py-4 border-[var(--color-border-subtle)]">
             <h3 className="text-sm font-bold uppercase tracking-wide">{title}</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors">
+            <button onClick={onClose} className="transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
               <X className="h-5 w-5" />
             </button>
           </div>

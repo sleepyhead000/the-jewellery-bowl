@@ -18,8 +18,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           id={id}
-          className={`w-full border px-4 py-3 text-sm outline-none transition-colors bg-white ${
-            error ? "border-red-500" : "border-gray-300 focus:border-black"
+          className={`w-full border px-4 py-3 text-sm outline-none transition-colors bg-[var(--color-elevated)] text-[var(--color-text-primary)] ${
+            error ? "border-[var(--color-danger)]" : "border-[var(--color-border)] focus:border-[var(--color-accent)]"
           } ${className}`}
           {...props}
         >
@@ -29,7 +29,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+        {error && <p className="text-xs mt-1 text-[var(--color-danger)]">{error}</p>}
       </div>
     );
   }

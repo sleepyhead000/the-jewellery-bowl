@@ -12,11 +12,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center font-bold uppercase tracking-wide transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
 
     const variants = {
-      primary: "bg-black text-white hover:bg-gray-800",
-      secondary: "bg-gray-100 text-black hover:bg-gray-200",
-      outline: "border border-gray-300 text-black hover:bg-gray-50",
-      danger: "bg-red-600 text-white hover:bg-red-700",
-      ghost: "text-gray-600 hover:bg-gray-100 hover:text-black",
+      primary: "text-[var(--color-accent-contrast)] bg-[var(--color-accent)] hover:opacity-90",
+      secondary: "text-[var(--color-text-primary)] bg-[var(--color-surface)] hover:opacity-90",
+      outline: "border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface)]",
+      danger: "text-white bg-[var(--color-danger)] hover:opacity-90",
+      ghost: "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
     };
 
     const sizes = {

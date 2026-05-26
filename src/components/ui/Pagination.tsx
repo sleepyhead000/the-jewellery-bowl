@@ -28,14 +28,14 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 text-gray-400 hover:text-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
 
       {pages.map((page, i) =>
         page === "..." ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-gray-400 text-sm">
+          <span key={`ellipsis-${i}`} className="px-2 text-[var(--color-text-muted)] text-sm">
             ...
           </span>
         ) : (
@@ -44,8 +44,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             onClick={() => onPageChange(page)}
             className={`min-w-[32px] h-8 text-xs font-bold transition-colors ${
               page === currentPage
-                ? "bg-black text-white"
-                : "text-gray-600 hover:bg-gray-100"
+                ? "bg-[var(--color-accent)] text-[var(--color-accent-contrast)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]"
             }`}
           >
             {page}
@@ -56,7 +56,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 text-gray-400 hover:text-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronRight className="h-4 w-4" />
       </button>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
 // GET /api/cart — fetch current user's cart
 export async function GET() {
@@ -51,14 +52,19 @@ export async function GET() {
 
 // POST /api/cart — add item
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Please log in to add to cart" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `cart:post:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { variantId, quantity = 1 } = await req.json();
   if (!variantId || quantity < 1) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return validationError(context.requestId, "Invalid input");
   }
 
   // Validate variant exists and has stock
@@ -69,40 +75,45 @@ export async function POST(req: NextRequest) {
 
   // Upsert: add or increment
   const existing = await db.cartItem.findUnique({
-    where: { userId_variantId: { userId: session.user.id, variantId } },
+    where: { userId_variantId: { userId: context.userId!, variantId } },
   });
 
   const newQty = (existing?.quantity || 0) + quantity;
   if (newQty > variant.stock) {
-    return NextResponse.json({ error: `Only ${variant.stock} available` }, { status: 400 });
+    return validationError(context.requestId, `Only ${variant.stock} available`);
   }
 
   const item = await db.cartItem.upsert({
-    where: { userId_variantId: { userId: session.user.id, variantId } },
+    where: { userId_variantId: { userId: context.userId!, variantId } },
     update: { quantity: newQty },
-    create: { userId: session.user.id, variantId, quantity },
+    create: { userId: context.userId!, variantId, quantity },
   });
 
-  return NextResponse.json(item);
+  return withRequestId(context.requestId, item);
 }
 
 // PATCH /api/cart — update quantity
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `cart:patch:${userId ?? "anon"}`,
+    rateLimitMax: 80,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { variantId, quantity } = await req.json();
   if (!variantId || quantity < 0) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return validationError(context.requestId, "Invalid input");
   }
 
   if (quantity === 0) {
     await db.cartItem.deleteMany({
-      where: { userId: session.user.id, variantId },
+      where: { userId: context.userId!, variantId },
     });
-    return NextResponse.json({ deleted: true });
+    return withRequestId(context.requestId, { deleted: true });
   }
 
   const variant = await db.productVariant.findUnique({ where: { id: variantId } });
@@ -110,36 +121,40 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Variant not found" }, { status: 404 });
   }
   if (quantity > variant.stock) {
-    return NextResponse.json({ error: `Only ${variant.stock} available` }, { status: 400 });
+    return validationError(context.requestId, `Only ${variant.stock} available`);
   }
 
   const item = await db.cartItem.update({
-    where: { userId_variantId: { userId: session.user.id, variantId } },
+    where: { userId_variantId: { userId: context.userId!, variantId } },
     data: { quantity },
   });
 
-  return NextResponse.json(item);
+  return withRequestId(context.requestId, item);
 }
 
 // DELETE /api/cart — remove item or clear cart
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `cart:delete:${userId ?? "anon"}`,
+    rateLimitMax: 60,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { variantId } = await req.json().catch(() => ({ variantId: null }));
 
   if (variantId) {
     await db.cartItem.deleteMany({
-      where: { userId: session.user.id, variantId },
+      where: { userId: context.userId!, variantId },
     });
   } else {
     // Clear entire cart
     await db.cartItem.deleteMany({
-      where: { userId: session.user.id },
+      where: { userId: context.userId! },
     });
   }
 
-  return NextResponse.json({ deleted: true });
+  return withRequestId(context.requestId, { deleted: true });
 }

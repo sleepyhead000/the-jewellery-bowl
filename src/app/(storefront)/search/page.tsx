@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import ProductCard from "@/components/storefront/ProductCard";
 import type { Prisma } from "@/generated/prisma/client";
+import { canSearchQuery, normalizeSearchQuery } from "@/lib/search";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -8,7 +9,8 @@ interface Props {
 
 export default async function SearchPage({ searchParams }: Props) {
   const params = await searchParams;
-  const query = params.q?.trim() || "";
+  const rawQuery = params.q?.trim() ?? "";
+  const query = normalizeSearchQuery(rawQuery);
   const page = parseInt(params.page || "1");
   const limit = 20;
 
@@ -22,7 +24,7 @@ export default async function SearchPage({ searchParams }: Props) {
   let products: SearchProduct[] = [];
   let total = 0;
 
-  if (query) {
+  if (canSearchQuery(query)) {
     const where: Prisma.ProductWhereInput = {
       status: "ACTIVE" as const,
       OR: [
@@ -51,7 +53,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <h1 className="text-3xl font-bold uppercase tracking-tight">Search</h1>
         {query ? (
           <p className="text-gray-500 text-sm mt-1">
-            {total} result{total !== 1 ? "s" : ""} for &ldquo;{query}&rdquo;
+            {total} result{total !== 1 ? "s" : ""} for &ldquo;{rawQuery}&rdquo;
           </p>
         ) : (
           <p className="text-gray-500 text-sm mt-1">Enter a search term above</p>
@@ -64,7 +66,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <input
             type="text"
             name="q"
-            defaultValue={query}
+            defaultValue={rawQuery}
             placeholder="Search products..."
             className="flex-1 border border-gray-300 border-r-0 px-4 py-3 text-sm outline-none focus:border-black"
             autoFocus
@@ -80,7 +82,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
       {query && products.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-sm">No products found for &ldquo;{query}&rdquo;</p>
+          <p className="text-sm">No products found for &ldquo;{rawQuery}&rdquo;</p>
           <p className="text-xs mt-2">Try a different search term</p>
         </div>
       ) : (
@@ -91,7 +93,7 @@ export default async function SearchPage({ searchParams }: Props) {
               id={product.id}
               slug={product.slug}
               name={product.name}
-              image={product.images[0]?.url || "/placeholder.jpg"}
+              image={product.images[0]?.url || "/placeholder.svg"}
               price={product.basePrice / 100}
               salePrice={product.variants[0]?.salePrice ? product.variants[0].salePrice / 100 : undefined}
               variantId={product.variants[0]?.id}
@@ -119,3 +121,4 @@ export default async function SearchPage({ searchParams }: Props) {
     </div>
   );
 }
+

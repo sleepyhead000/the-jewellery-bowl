@@ -1,253 +1,184 @@
-import Hero from "@/components/storefront/Hero";
 import HomeIntroShell from "@/components/storefront/HomeIntroShell";
-import ProductCard from "@/components/storefront/ProductCard";
-import SocialProof from "@/components/storefront/SocialProof";
+import HomepageDesign from "@/components/storefront/HomepageDesign";
 import { db } from "@/lib/db";
+import {
+    defaultHomepageDiscountMerch,
+    defaultHomepageHeroSlides,
+    defaultHomepageLayoutConfig,
+    defaultHomepageTranslations,
+    type HomepageSectionConfig,
+    normalizeHomepageDiscountMerch,
+    normalizeHomepageHeroSlidesConfig,
+    normalizeHomepageLayoutConfig,
+    normalizeHomepageTranslations,
+} from "@/lib/homepage-config";
 
 export const revalidate = 120;
 
-export default async function Home() {
-    const [homepageSetting, newArrivals] = await Promise.all([
-        db.setting.findUnique({ where: { key: "homepage_products" } }),
-        db.product.findMany({
-            where: { status: "ACTIVE" },
-            include: {
-                variants: { where: { isActive: true }, orderBy: { price: "asc" }, take: 1 },
-                images: { orderBy: { sortOrder: "asc" }, take: 1 },
-            },
+type HomepageProduct = {
+    id: string;
+    slug: string;
+    name: string;
+    image: string;
+    price: number;
+    salePrice?: number;
+    variantId?: string;
+};
+
+function mapProduct(product: {
+    id: string;
+    slug: string;
+    name: string;
+    basePrice: number;
+    variants: Array<{ id: string; price: number; salePrice: number | null }>;
+    images: Array<{ url: string }>;
+}): HomepageProduct {
+    const variant = product.variants[0];
+    const image = product.images[0];
+    return {
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        image: image?.url ?? "https://placehold.co/600x800/e6e0e0/8b7b7b?text=No+Image",
+        price: (variant?.price ?? product.basePrice) / 100,
+        salePrice: variant?.salePrice ? variant.salePrice / 100 : undefined,
+        variantId: variant?.id,
+    };
+}
+
+async function resolveProductsForSection(
+    section: HomepageSectionConfig,
+    pinnedDiscountProductIds: string[]
+): Promise<HomepageProduct[]> {
+    const include = {
+        variants: { where: { isActive: true }, orderBy: { price: "asc" as const }, take: 1 },
+        images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
+    };
+
+    if (section.productSource === "manual" && section.manualProductIds.length > 0) {
+        const products = await db.product.findMany({
+            where: { id: { in: section.manualProductIds }, status: "ACTIVE" },
+            include,
+        });
+        const ordered = section.manualProductIds
+            .map((id) => products.find((product) => product.id === id))
+            .filter((product): product is (typeof products)[number] => Boolean(product));
+        return ordered.slice(0, section.limit).map(mapProduct);
+    }
+
+    if (section.productSource === "category" && section.categorySlug) {
+        const products = await db.product.findMany({
+            where: { status: "ACTIVE", category: { slug: section.categorySlug } },
+            include,
+            take: section.limit,
             orderBy: { createdAt: "desc" },
-            take: 10,
-        }),
+        });
+        return products.map(mapProduct);
+    }
+
+    if (section.productSource === "discounted") {
+        const pinnedProducts = pinnedDiscountProductIds.length
+            ? await db.product.findMany({
+                  where: {
+                      id: { in: pinnedDiscountProductIds },
+                      status: "ACTIVE",
+                      variants: { some: { isActive: true, salePrice: { not: null } } },
+                  },
+                  include,
+              })
+            : [];
+
+        const orderedPinned = pinnedDiscountProductIds
+            .map((id) => pinnedProducts.find((product) => product.id === id))
+            .filter((product): product is (typeof pinnedProducts)[number] => Boolean(product));
+
+        const remainingLimit = Math.max(section.limit - orderedPinned.length, 0);
+        const autoProducts =
+            remainingLimit > 0
+                ? await db.product.findMany({
+                      where: {
+                          status: "ACTIVE",
+                          variants: { some: { isActive: true, salePrice: { not: null } } },
+                          id: { notIn: orderedPinned.map((product) => product.id) },
+                      },
+                      include,
+                      take: remainingLimit,
+                      orderBy: { createdAt: "desc" },
+                  })
+                : [];
+
+        return [...orderedPinned, ...autoProducts].slice(0, section.limit).map(mapProduct);
+    }
+
+    if (section.productSource === "popular") {
+        const products = await db.product.findMany({
+            where: { status: "ACTIVE" },
+            include,
+            take: section.limit,
+            orderBy: [{ reviewCount: "desc" }, { createdAt: "desc" }],
+        });
+        return products.map(mapProduct);
+    }
+
+    const products = await db.product.findMany({
+        where: { status: "ACTIVE" },
+        include,
+        take: section.limit,
+        orderBy: { createdAt: "desc" },
+    });
+    return products.map(mapProduct);
+}
+
+export default async function Home() {
+    const [layoutSetting, slidesSetting, translationsSetting, discountMerchSetting] = await Promise.all([
+        db.setting.findUnique({ where: { key: "homepage_layout_v1" } }),
+        db.setting.findUnique({ where: { key: "homepage_hero_slides" } }),
+        db.setting.findUnique({ where: { key: "homepage_translations" } }),
+        db.setting.findUnique({ where: { key: "homepage_discount_merch" } }),
     ]);
 
-    const parsed = (typeof homepageSetting?.value === "object" && homepageSetting.value
-        ? homepageSetting.value
-        : {}) as { featuredIds?: unknown; popularIds?: unknown };
+    const layoutConfig = normalizeHomepageLayoutConfig(layoutSetting?.value ?? defaultHomepageLayoutConfig);
+    const heroConfig = normalizeHomepageHeroSlidesConfig(slidesSetting?.value ?? defaultHomepageHeroSlides);
+    const translations = normalizeHomepageTranslations(translationsSetting?.value ?? defaultHomepageTranslations);
+    const discountMerch = normalizeHomepageDiscountMerch(discountMerchSetting?.value ?? defaultHomepageDiscountMerch);
 
-    const featuredIds = Array.isArray(parsed.featuredIds)
-        ? parsed.featuredIds.filter((id): id is string => typeof id === "string")
-        : [];
-    const popularIds = Array.isArray(parsed.popularIds)
-        ? parsed.popularIds.filter((id): id is string => typeof id === "string")
-        : [];
-
-    const selectedProductIds = Array.from(new Set([...featuredIds, ...popularIds]));
-    const selectedProducts = selectedProductIds.length
-        ? await db.product.findMany({
-              where: { id: { in: selectedProductIds }, status: "ACTIVE" },
-              include: {
-                  variants: { where: { isActive: true }, orderBy: { price: "asc" }, take: 1 },
-                  images: { orderBy: { sortOrder: "asc" }, take: 1 },
-              },
-          })
-        : [];
-
-    const orderByIds = <T extends { id: string }>(items: T[], ids: string[]) =>
-        ids.map((id) => items.find((x) => x.id === id)).filter((x): x is T => Boolean(x));
-
-    const featuredProducts = orderByIds(selectedProducts, featuredIds);
-    const popularProducts = orderByIds(selectedProducts, popularIds);
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const enabledSections = layoutConfig.sections.filter((section) => section.enabled);
+    const productsBySectionEntries = await Promise.all(
+        enabledSections.map(
+            async (section) =>
+                [section.id, await resolveProductsForSection(section, discountMerch.pinnedProductIds)] as const
+        )
+    );
+    const productsBySection = Object.fromEntries(productsBySectionEntries);
+    const sectionHasProducts = (sectionId: string) => (productsBySection[sectionId] ?? []).length > 0;
+    const cleanedLayoutConfig = {
+        ...layoutConfig,
+        sections: layoutConfig.sections.map((section) => {
+            if (!section.enabled) return section;
+            if (["featured", "new_arrivals", "popular", "offers", "category_highlights"].includes(section.type)) {
+                if (!sectionHasProducts(section.id)) return { ...section, enabled: false };
+            }
+            if (section.type === "promo_spotlight") {
+                const hasCoreContent =
+                    section.imageUrl.trim().length > 0 &&
+                    section.title.en.trim().length > 0 &&
+                    section.title.bn.trim().length > 0 &&
+                    section.subtitle.en.trim().length > 0 &&
+                    section.subtitle.bn.trim().length > 0;
+                if (!hasCoreContent) return { ...section, enabled: false };
+            }
+            return section;
+        }),
+    };
 
     return (
         <HomeIntroShell>
-            <div className="flex flex-col gap-16 pb-16" style={{ background: "#0d0d0d" }}>
-                <Hero />
-
-            {/* Featured Products */}
-            <section className="container mx-auto px-4 md:px-8">
-                <div className="text-center mb-12 space-y-3">
-                    <p
-                        className="text-[10px] tracking-[0.35em] uppercase font-body"
-                        style={{ color: "#C9A84C" }}
-                    >
-                        Handpicked highlights
-                    </p>
-                    <h2
-                        className="text-3xl md:text-4xl font-bold uppercase tracking-tight font-display"
-                        style={{ color: "#E8D9B0" }}
-                    >
-                        Featured Products
-                    </h2>
-                    <p
-                        className="text-sm tracking-wide font-body max-w-md mx-auto"
-                        style={{ color: "#7a6e58" }}
-                    >
-                        Signature pieces selected from our best collections
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
-                    {featuredProducts.map((product) => {
-                        const variant = product.variants[0];
-                        const image = product.images[0];
-                        return (
-                            <ProductCard
-                                key={product.id}
-                                id={product.id}
-                                slug={product.slug}
-                                name={product.name}
-                                image={
-                                    image?.url ||
-                                    "https://placehold.co/600x600/1a1010/7a6e58?text=No+Image"
-                                }
-                                price={variant ? variant.price / 100 : product.basePrice / 100}
-                                salePrice={
-                                    variant?.salePrice ? variant.salePrice / 100 : undefined
-                                }
-                                variantId={variant?.id}
-                                isNew={new Date(product.createdAt) > thirtyDaysAgo}
-                            />
-                        );
-                    })}
-                </div>
-            </section>
-
-            {/* New Arrivals */}
-            <section className="container mx-auto px-4 md:px-8">
-                <div className="text-center mb-12 space-y-3">
-                    <p
-                        className="text-[10px] tracking-[0.35em] uppercase font-body"
-                        style={{ color: "#C9A84C" }}
-                    >
-                        Curated for you
-                    </p>
-                    <h2
-                        className="text-3xl md:text-4xl font-bold uppercase tracking-tight font-display"
-                        style={{ color: "#E8D9B0" }}
-                    >
-                        New Arrivals
-                    </h2>
-                    <p
-                        className="text-sm tracking-wide font-body max-w-md mx-auto"
-                        style={{ color: "#7a6e58" }}
-                    >
-                        Discover our latest collection of traditional accessories
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
-                    {newArrivals.map((product) => {
-                        const variant = product.variants[0];
-                        const image = product.images[0];
-                        return (
-                            <ProductCard
-                                key={product.id}
-                                id={product.id}
-                                slug={product.slug}
-                                name={product.name}
-                                image={
-                                    image?.url ||
-                                    "https://placehold.co/600x600/1a1010/7a6e58?text=No+Image"
-                                }
-                                price={variant ? variant.price / 100 : product.basePrice / 100}
-                                salePrice={
-                                    variant?.salePrice ? variant.salePrice / 100 : undefined
-                                }
-                                variantId={variant?.id}
-                                isNew={new Date(product.createdAt) > thirtyDaysAgo}
-                            />
-                        );
-                    })}
-                </div>
-            </section>
-
-            {/* Popular Products */}
-            <section className="container mx-auto px-4 md:px-8">
-                <div className="text-center mb-12 space-y-3">
-                    <p
-                        className="text-[10px] tracking-[0.35em] uppercase font-body"
-                        style={{ color: "#C9A84C" }}
-                    >
-                        Loved by customers
-                    </p>
-                    <h2
-                        className="text-3xl md:text-4xl font-bold uppercase tracking-tight font-display"
-                        style={{ color: "#E8D9B0" }}
-                    >
-                        Popular Products
-                    </h2>
-                    <p
-                        className="text-sm tracking-wide font-body max-w-md mx-auto"
-                        style={{ color: "#7a6e58" }}
-                    >
-                        Top-rated picks based on customer interest and reviews
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
-                    {popularProducts.map((product) => {
-                        const variant = product.variants[0];
-                        const image = product.images[0];
-                        return (
-                            <ProductCard
-                                key={product.id}
-                                id={product.id}
-                                slug={product.slug}
-                                name={product.name}
-                                image={
-                                    image?.url ||
-                                    "https://placehold.co/600x600/1a1010/7a6e58?text=No+Image"
-                                }
-                                price={variant ? variant.price / 100 : product.basePrice / 100}
-                                salePrice={
-                                    variant?.salePrice ? variant.salePrice / 100 : undefined
-                                }
-                                variantId={variant?.id}
-                                isNew={new Date(product.createdAt) > thirtyDaysAgo}
-                            />
-                        );
-                    })}
-                </div>
-            </section>
-
-            {/* Features strip */}
-            <section
-                className="py-14 border-y"
-                style={{
-                    background: "#1a1010",
-                    borderColor: "rgba(201,168,76,0.18)",
-                }}
-            >
-                <div className="container mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    {[
-                        {
-                            title: "Free Shipping",
-                            body: "On all orders over BDT 5,000 within Bangladesh.",
-                        },
-                        {
-                            title: "Premium Quality",
-                            body: "Guaranteed authentic and high-quality materials.",
-                        },
-                        {
-                            title: "24/7 Support",
-                            body: "Dedicated customer support for our valued clients.",
-                        },
-                    ].map((f) => (
-                        <div key={f.title} className="space-y-3">
-                            <div className="text-2xl mb-2" style={{ color: "#C9A84C" }}>
-                                *
-                            </div>
-                            <h3
-                                className="text-sm font-bold uppercase tracking-widest font-display"
-                                style={{ color: "#E8D9B0" }}
-                            >
-                                {f.title}
-                            </h3>
-                            <p className="text-sm px-8 font-body" style={{ color: "#7a6e58" }}>
-                                {f.body}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Social Proof */}
-                <SocialProof />
-            </div>
+            <HomepageDesign
+                heroConfig={heroConfig}
+                layoutConfig={cleanedLayoutConfig}
+                translations={translations}
+                productsBySection={productsBySection}
+            />
         </HomeIntroShell>
     );
 }
-

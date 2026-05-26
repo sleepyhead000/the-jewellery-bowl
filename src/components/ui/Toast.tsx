@@ -24,11 +24,11 @@ const icons = {
   info: Info,
 };
 
-const styles = {
-  success: "border-green-500 bg-green-50",
-  error: "border-red-500 bg-red-50",
-  warning: "border-amber-500 bg-amber-50",
-  info: "border-blue-500 bg-blue-50",
+const styles: Record<ToastType, React.CSSProperties> = {
+  success: { borderColor: "var(--color-success)", background: "color-mix(in oklab, var(--color-success), transparent 86%)" },
+  error: { borderColor: "var(--color-danger)", background: "color-mix(in oklab, var(--color-danger), transparent 86%)" },
+  warning: { borderColor: "var(--color-warning)", background: "color-mix(in oklab, var(--color-warning), transparent 86%)" },
+  info: { borderColor: "var(--color-accent)", background: "color-mix(in oklab, var(--color-accent), transparent 88%)" },
 };
 
 export function ToastProvider() {
@@ -54,13 +54,14 @@ export function ToastProvider() {
         return (
           <div
             key={t.id}
-            className={`flex items-center gap-3 border-l-4 px-4 py-3 shadow-lg ${styles[t.type]} animate-in slide-in-from-right`}
+            className="flex items-center gap-3 border-l-4 px-4 py-3 shadow-lg animate-in slide-in-from-right"
+            style={styles[t.type]}
           >
             <Icon className="h-5 w-5 flex-shrink-0" />
-            <p className="text-sm flex-1">{t.message}</p>
+            <p className="text-sm flex-1 text-[var(--color-text-primary)]">{t.message}</p>
             <button
               onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             >
               <X className="h-4 w-4" />
             </button>

@@ -121,7 +121,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                   id={product.id}
                   slug={product.slug}
                   name={product.name}
-                  image={product.images[0]?.url || "/placeholder.jpg"}
+                  image={product.images[0]?.url || "/placeholder.svg"}
                   price={product.basePrice / 100}
                   salePrice={product.variants[0]?.salePrice ? product.variants[0].salePrice / 100 : undefined}
                   variantId={product.variants[0]?.id}
@@ -156,3 +156,4 @@ export default async function ProductsPage({ searchParams }: Props) {
     </div>
   );
 }
+

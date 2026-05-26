@@ -62,15 +62,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     <div className="max-w-7xl mx-auto px-4 py-12">
       {/* Breadcrumb */}
       <nav className="text-xs text-gray-400 mb-8 space-x-2">
-        <a href="/" className="hover:text-black transition-colors">Home</a>
+        <Link href="/" className="hover:text-black transition-colors">Home</Link>
         <span>/</span>
-        <a href="/products" className="hover:text-black transition-colors">Products</a>
+        <Link href="/products" className="hover:text-black transition-colors">Products</Link>
         {category.parent && (
           <>
             <span>/</span>
-            <a href={`/categories/${category.parent.slug}`} className="hover:text-black transition-colors">
+            <Link href={`/categories/${category.parent.slug}`} className="hover:text-black transition-colors">
               {category.parent.name}
-            </a>
+            </Link>
           </>
         )}
         <span>/</span>
@@ -134,7 +134,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               id={product.id}
               slug={product.slug}
               name={product.name}
-              image={product.images[0]?.url || "/placeholder.jpg"}
+              image={product.images[0]?.url || "/placeholder.svg"}
               price={product.basePrice / 100}
               salePrice={product.variants[0]?.salePrice ? product.variants[0].salePrice / 100 : undefined}
               variantId={product.variants[0]?.id}
@@ -162,3 +162,4 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     </div>
   );
 }
+

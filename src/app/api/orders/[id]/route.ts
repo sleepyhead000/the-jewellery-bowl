@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { notifyOrderStatusChanged } from "@/lib/discord";
 import { sendAdminPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { validateOriginForMutations } from "@/lib/api-security";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -61,6 +62,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (!session?.user || !hasPermission(session.user.role, "orders.update")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  const originErr = validateOriginForMutations(req, crypto.randomUUID());
+  if (originErr) return originErr;
   const limiter = await rateLimit(`orders:update:${session.user.id}`, 40, 300);
   if (!limiter.allowed) {
     return NextResponse.json(

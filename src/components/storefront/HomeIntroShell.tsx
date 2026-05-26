@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LandingIntroOverlay from "@/components/storefront/LandingIntroOverlay";
 
 type HomeIntroShellProps = {
@@ -9,11 +9,7 @@ type HomeIntroShellProps = {
 
 const INTRO_SESSION_KEY = "tjb-home-intro-seen";
 
-function getInitialContentVisibility(): boolean {
-    if (typeof window === "undefined") {
-        return false;
-    }
-
+function readContentVisibilityFromSession(): boolean {
     try {
         return window.sessionStorage.getItem(INTRO_SESSION_KEY) === "1";
     } catch (error) {
@@ -23,8 +19,19 @@ function getInitialContentVisibility(): boolean {
 }
 
 export default function HomeIntroShell({ children }: HomeIntroShellProps) {
-    const [isContentVisible, setIsContentVisible] = useState<boolean>(getInitialContentVisibility);
-    const [isIntroActive, setIsIntroActive] = useState<boolean>(() => !getInitialContentVisibility());
+    const [isContentVisible, setIsContentVisible] = useState<boolean>(false);
+    const [isIntroActive, setIsIntroActive] = useState<boolean>(true);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const isSeen = readContentVisibilityFromSession();
+            if (isSeen) {
+                setIsContentVisible(true);
+                setIsIntroActive(false);
+            }
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     return (
         <>

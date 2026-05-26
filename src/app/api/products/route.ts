@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 
 const variantSchema = z.object({
-  sku: z.string().min(1),
+  sku: z.string().trim().optional(),
   price: z.number().int().positive(),
   salePrice: z.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0).optional(),
@@ -15,6 +15,18 @@ const variantSchema = z.object({
   weight: z.number().int().optional().nullable(),
   isActive: z.boolean().optional(),
 });
+
+const generateVariantSku = async (productName: string, index: number): Promise<string> => {
+  const base = slugify(productName).toUpperCase() || "VARIANT";
+  let attempt = 0;
+  while (attempt < 1000) {
+    const candidate = `${base}-${index + 1}-${Date.now().toString().slice(-6)}-${attempt + 1}`;
+    const existing = await db.productVariant.findUnique({ where: { sku: candidate } });
+    if (!existing) return candidate;
+    attempt += 1;
+  }
+  throw new Error("Unable to generate unique SKU for variant");
+};
 
 const productSchema = z.object({
   name: z.string().min(1).max(200),
@@ -118,13 +130,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Product with this slug already exists" }, { status: 409 });
   }
 
+  const variantsWithSku = variants
+    ? await Promise.all(
+        variants.map(async (variant, index) => {
+          const normalizedSku = variant.sku?.trim();
+          const sku = normalizedSku && normalizedSku.length > 0
+            ? normalizedSku
+            : await generateVariantSku(productData.name, index);
+          return { ...variant, sku };
+        })
+      )
+    : undefined;
+
   const product = await db.product.create({
     data: {
       ...productData,
       slug: finalSlug,
       tags: tags || [],
-      variants: variants
-        ? { create: variants.map(({ attributes, ...v }) => ({ ...v, ...(attributes !== undefined && { attributes: attributes as Prisma.InputJsonValue }) })) }
+      variants: variantsWithSku
+        ? { create: variantsWithSku.map(({ attributes, ...v }) => ({ ...v, ...(attributes !== undefined && { attributes: attributes as Prisma.InputJsonValue }) })) }
         : undefined,
       images: images ? { create: images } : undefined,
     },

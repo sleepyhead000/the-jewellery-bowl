@@ -50,6 +50,7 @@ export default function EditProductPage({ params }: Props) {
     images: ((product.images as Array<{ url: string }>) || []).map((img) => img.url),
     variants: ((product.variants as Array<Record<string, unknown>>) || []).map((v) => ({
       id: v.id as string,
+      displayName: ((v.attributes as Record<string, string> | null)?.displayName as string) || "",
       sku: (v.sku as string) || "",
       price: (v.price as number) / 100,
       salePrice: v.salePrice ? (v.salePrice as number) / 100 : 0,

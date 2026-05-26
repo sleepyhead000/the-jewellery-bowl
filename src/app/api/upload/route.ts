@@ -12,7 +12,12 @@ export async function POST(req: NextRequest) {
   });
   if (error) return error;
 
-  const formData = await req.formData();
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return validationError(context.requestId, "Invalid multipart form data. Please reselect files and try again.");
+  }
   const files = formData.getAll("files") as File[];
 
   if (!files.length) {

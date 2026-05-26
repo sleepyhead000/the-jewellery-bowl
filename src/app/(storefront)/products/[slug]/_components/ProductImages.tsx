@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useEffect } from "react";
 
 interface Props {
   images: string[];
@@ -10,6 +11,10 @@ interface Props {
 
 export default function ProductImages({ images, name }: Props) {
   const [selected, setSelected] = useState(0);
+
+  useEffect(() => {
+    setSelected(0);
+  }, [images]);
 
   if (images.length === 0) {
     return (

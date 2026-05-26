@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
 
 // GET /api/wishlist
 export async function GET() {
@@ -27,28 +28,33 @@ export async function GET() {
 
 // POST /api/wishlist — toggle wishlist (add/remove)
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { context, error } = await runSecurityChecks(req, {
+    authMode: "authenticated",
+    requireJsonBody: true,
+    requireSameOriginForMutations: true,
+    rateLimitKey: (_req, userId) => `wishlist:post:${userId ?? "anon"}`,
+    rateLimitMax: 40,
+    rateLimitWindowSeconds: 300,
+  });
+  if (error) return error;
 
   const { productId } = (await req.json()) as { productId: string };
   if (!productId) {
-    return NextResponse.json({ error: "productId required" }, { status: 400 });
+    return validationError(context.requestId, "productId required");
   }
 
   const existing = await db.wishlistItem.findUnique({
-    where: { userId_productId: { userId: session.user.id, productId } },
+    where: { userId_productId: { userId: context.userId!, productId } },
   });
 
   if (existing) {
     await db.wishlistItem.delete({ where: { id: existing.id } });
-    return NextResponse.json({ wishlisted: false });
+    return withRequestId(context.requestId, { wishlisted: false });
   }
 
   await db.wishlistItem.create({
-    data: { userId: session.user.id, productId },
+    data: { userId: context.userId!, productId },
   });
 
-  return NextResponse.json({ wishlisted: true });
+  return withRequestId(context.requestId, { wishlisted: true });
 }

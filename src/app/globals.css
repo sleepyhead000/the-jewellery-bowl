@@ -1,6 +1,32 @@
 @import "tailwindcss";
 
 :root {
+  --background: #f4f1ed;
+  --foreground: #2e2723;
+  --footer-bg: #ebe5df;
+  --champagne: #4a3f38;
+  --gold: #8b7360;
+  --muted-gold: #8f7f73;
+  --deep-red: #905454;
+  --pure-white: #ffffff;
+
+  --color-bg: #f4f1ed;
+  --color-surface: #efe8e1;
+  --color-elevated: #ffffff;
+  --color-text-primary: #2e2723;
+  --color-text-secondary: #5f534b;
+  --color-text-muted: #8d7f74;
+  --color-border: #d5c9bf;
+  --color-border-subtle: #e5ddd6;
+  --color-accent: #8b7360;
+  --color-accent-contrast: #f8f4f0;
+  --color-success: #3f6b4b;
+  --color-warning: #8a6a2b;
+  --color-danger: #8a4343;
+  --color-product-card-border: #746764;
+}
+
+[data-theme="dark"] {
   --background: #0d0d0d;
   --foreground: #e8d9b0;
   --footer-bg: #000000;
@@ -9,6 +35,21 @@
   --muted-gold: #7a6e58;
   --deep-red: #8b1a1a;
   --pure-white: #ffffff;
+
+  --color-bg: #0d0d0d;
+  --color-surface: #1a1010;
+  --color-elevated: #241818;
+  --color-text-primary: #e8d9b0;
+  --color-text-secondary: #b9a27f;
+  --color-text-muted: #7a6e58;
+  --color-border: #3b2d24;
+  --color-border-subtle: #2a1f19;
+  --color-accent: #c9a84c;
+  --color-accent-contrast: #1b120d;
+  --color-success: #5f8f6b;
+  --color-warning: #c59b47;
+  --color-danger: #b75b5b;
+  --color-product-card-border: var(--color-border);
 }
 
 @theme inline {
@@ -27,8 +68,8 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
@@ -172,6 +213,10 @@ h1, h2, h3, h4, h5, h6 {
   transition: opacity 180ms ease;
 }
 
+[data-theme="dark"] .header-icon-pill .header-pill-icon-link svg {
+  stroke: #ffffff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .intro-overlay-closing {
     transition: opacity 220ms linear;
@@ -188,4 +233,30 @@ h1, h2, h3, h4, h5, h6 {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* Theme remaps for existing utility-heavy pages (storefront + auth + admin) */
+@layer utilities {
+  .bg-white { background-color: var(--color-elevated) !important; }
+  .bg-black { background-color: var(--color-accent) !important; }
+  .text-white { color: var(--color-accent-contrast) !important; }
+  .text-black { color: var(--color-text-primary) !important; }
+
+  .bg-gray-50 { background-color: var(--color-bg) !important; }
+  .bg-gray-100 { background-color: var(--color-surface) !important; }
+  .bg-gray-200 { background-color: var(--color-border-subtle) !important; }
+  .bg-gray-800 { background-color: var(--color-surface) !important; }
+  .bg-gray-950 { background-color: var(--color-surface) !important; }
+
+  .text-gray-300 { color: var(--color-text-muted) !important; }
+  .text-gray-400 { color: var(--color-text-muted) !important; }
+  .text-gray-500 { color: var(--color-text-secondary) !important; }
+  .text-gray-600 { color: var(--color-text-secondary) !important; }
+  .text-gray-700 { color: var(--color-text-primary) !important; }
+
+  .border-gray-50 { border-color: var(--color-border-subtle) !important; }
+  .border-gray-100 { border-color: var(--color-border-subtle) !important; }
+  .border-gray-200 { border-color: var(--color-border) !important; }
+  .border-gray-300 { border-color: var(--color-border) !important; }
+  .border-gray-800 { border-color: var(--color-border) !important; }
 }

@@ -13,6 +13,7 @@ interface Category {
 
 interface Variant {
   id?: string;
+  displayName: string;
   sku: string;
   price: number;
   salePrice: number;
@@ -36,7 +37,7 @@ interface ProductFormProps {
   initialData?: ProductFormData & { id: string };
 }
 
-const emptyVariant: Variant = { sku: "", price: 0, salePrice: 0, stock: 0, attributes: {} };
+const emptyVariant: Variant = { displayName: "", sku: "", price: 0, salePrice: 0, stock: 0, attributes: {} };
 
 export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     }));
 
   const addVariant = () =>
-    setForm((f) => ({ ...f, variants: [...f.variants, { ...emptyVariant, sku: `SKU-${f.variants.length + 1}` }] }));
+    setForm((f) => ({ ...f, variants: [...f.variants, { ...emptyVariant }] }));
 
   const removeVariant = (index: number) =>
     setForm((f) => ({ ...f, variants: f.variants.filter((_, i) => i !== index) }));
@@ -86,8 +87,18 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     if (res.ok) {
       const data = await res.json();
-      const urls = data.files.map((f: { url: string }) => f.url);
-      setField("images", [...form.images, ...urls]);
+      const uploaded = Array.isArray(data.uploaded) ? data.uploaded : [];
+      const urls = uploaded
+        .map((file: { urls?: { medium?: string } }) => file.urls?.medium)
+        .filter((url: unknown): url is string => typeof url === "string" && url.length > 0);
+
+      if (urls.length > 0) {
+        setField("images", [...form.images, ...urls]);
+      }
+
+      if (Array.isArray(data.errors) && data.errors.length > 0) {
+        alert(`Some files failed to upload: ${data.errors.map((entry: { name?: string; error?: string }) => `${entry.name ?? "file"} (${entry.error ?? "error"})`).join(", ")}`);
+      }
     }
     setUploading(false);
     e.target.value = "";
@@ -112,13 +123,22 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         .map((t) => t.trim())
         .filter(Boolean),
       images: form.images.map((url, i) => ({ url, sortOrder: i })),
-      variants: form.variants.map((v) => ({
-        sku: v.sku,
-        price: Math.round(v.price * 100),
-        salePrice: v.salePrice ? Math.round(v.salePrice * 100) : null,
-        stock: v.stock,
-        attributes: v.attributes,
-      })),
+      variants: form.variants.map((v) => {
+        const attributes: Record<string, string> = { ...v.attributes };
+        if (v.displayName.trim().length > 0) {
+          attributes.displayName = v.displayName.trim();
+        } else {
+          delete attributes.displayName;
+        }
+
+        return {
+          sku: v.sku,
+          price: Math.round(v.price * 100),
+          salePrice: v.salePrice ? Math.round(v.salePrice * 100) : null,
+          stock: v.stock,
+          attributes,
+        };
+      }),
     };
 
     const isEdit = !!initialData?.id;
@@ -279,12 +299,18 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Input
+                  label="Variant Name"
+                  value={variant.displayName}
+                  onChange={(e) => updateVariant(index, { displayName: e.target.value })}
+                  placeholder="e.g., Gold Small"
+                />
                 <Input
                   label="SKU"
                   value={variant.sku}
                   onChange={(e) => updateVariant(index, { sku: e.target.value })}
-                  required
+                  placeholder="Optional"
                 />
                 <Input
                   label="Price (BDT)"

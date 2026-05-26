@@ -13,12 +13,12 @@ export function Textarea({ className = "", label, error, id, ...props }: Textare
       )}
       <textarea
         id={id}
-        className={`w-full border px-4 py-3 text-sm outline-none transition-colors placeholder:text-gray-300 resize-y min-h-[100px] ${
-          error ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-black"
+        className={`w-full border px-4 py-3 text-sm outline-none transition-colors placeholder:text-[var(--color-text-muted)] resize-y min-h-[100px] bg-[var(--color-elevated)] text-[var(--color-text-primary)] ${
+          error ? "border-[var(--color-danger)] focus:border-[var(--color-danger)]" : "border-[var(--color-border)] focus:border-[var(--color-accent)]"
         } ${className}`}
         {...props}
       />
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs mt-1 text-[var(--color-danger)]">{error}</p>}
     </div>
   );
 }
