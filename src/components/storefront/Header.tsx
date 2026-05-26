@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import {
     defaultHomepageTopbarMode,
     defaultHomepageTranslations,
@@ -7,9 +8,16 @@ import {
 } from "@/lib/homepage-config";
 import HeaderBody from "@/components/storefront/HeaderBody";
 
+const isMissingTableError = (error: unknown): boolean => {
+    return (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2021"
+    );
+};
+
 export default async function Header() {
     const now = new Date();
-    const [translationsSetting, topbarSetting, announcements] = await Promise.all([
+    const [translationsResult, topbarResult, announcementsResult] = await Promise.allSettled([
         db.setting.findUnique({ where: { key: "homepage_translations" } }),
         db.setting.findUnique({ where: { key: "homepage_topbar_mode" } }),
         db.announcement.findMany({
@@ -22,6 +30,20 @@ export default async function Header() {
             select: { text: true },
         }),
     ]);
+
+    if (translationsResult.status === "rejected" && !isMissingTableError(translationsResult.reason)) {
+        throw translationsResult.reason;
+    }
+    if (topbarResult.status === "rejected" && !isMissingTableError(topbarResult.reason)) {
+        throw topbarResult.reason;
+    }
+    if (announcementsResult.status === "rejected" && !isMissingTableError(announcementsResult.reason)) {
+        throw announcementsResult.reason;
+    }
+
+    const translationsSetting = translationsResult.status === "fulfilled" ? translationsResult.value : null;
+    const topbarSetting = topbarResult.status === "fulfilled" ? topbarResult.value : null;
+    const announcements = announcementsResult.status === "fulfilled" ? announcementsResult.value : [];
 
     const t = normalizeHomepageTranslations(translationsSetting?.value ?? defaultHomepageTranslations);
     const topbar = normalizeHomepageTopbarMode(topbarSetting?.value ?? defaultHomepageTopbarMode);
