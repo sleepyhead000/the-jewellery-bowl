@@ -12,9 +12,10 @@ const resolveConnectionString = (): string => {
     return configured;
   }
 
-  // Allow Vercel build-time type/page-data collection to complete even when
-  // runtime secrets are not injected in the build environment.
-  if (process.env.VERCEL === "1") {
+  // Allow build-time type/page-data collection to complete when secrets are not
+  // injected at build-time. Do not use this fallback at runtime.
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+  if (process.env.VERCEL === "1" && isBuildPhase) {
     return "file:./.vercel-build-fallback.db";
   }
 
