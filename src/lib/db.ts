@@ -6,10 +6,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
+const resolveConnectionString = (): string => {
+  const configured = process.env.DATABASE_URL;
+  if (configured && configured.trim().length > 0) {
+    return configured;
+  }
+
+  // Allow Vercel build-time type/page-data collection to complete even when
+  // runtime secrets are not injected in the build environment.
+  if (process.env.VERCEL === "1") {
+    return "file:./.vercel-build-fallback.db";
+  }
+
   throw new Error("DATABASE_URL is not set");
-}
+};
+
+const connectionString = resolveConnectionString();
 if (/\[[^\]]+\]/.test(connectionString)) {
   throw new Error(
     "DATABASE_URL contains placeholder tokens like [PROJECT-REF]. Replace it with a real Postgres connection string in .env."
