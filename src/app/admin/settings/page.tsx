@@ -12,6 +12,7 @@ import type {
   HomepageDiscountMerchConfig,
 } from "@/lib/homepage-config";
 import type { FooterSettingsConfig, FooterLinkConfig, FooterSocialConfig } from "@/lib/footer-config";
+import type { ContentPageConfig, ContentPageKey, ContentPagesConfig } from "@/lib/content-pages-config";
 
 interface ShippingZone {
   id: string;
@@ -63,6 +64,7 @@ export default function AdminSettingsPage() {
           { id: "shipping", label: "Shipping Zones", content: <ShippingZonesSection /> },
           { id: "payments", label: "Payment Accounts", content: <PaymentAccountsSection /> },
           { id: "footer", label: "Footer + Social", content: <FooterSettingsSection /> },
+          { id: "content-pages", label: "Content Pages", content: <ContentPagesSettingsSection /> },
           { id: "homepage-design", label: "Homepage Design", content: <HomepageDesignSettingsSection /> },
         ]}
       />
@@ -209,6 +211,109 @@ function FooterLinksEditor({
         ))}
       </div>
     </div>
+  );
+}
+
+const CONTENT_PAGE_FIELDS: { key: ContentPageKey; label: string; supportsList: boolean }[] = [
+  { key: "about", label: "About Page", supportsList: false },
+  { key: "contact", label: "Contact Page", supportsList: false },
+  { key: "howToBuy", label: "How To Buy Page", supportsList: true },
+];
+
+function ContentPagesSettingsSection() {
+  const [form, setForm] = useState<ContentPagesConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchContentPages = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
+    const res = await fetch("/api/admin/settings/content-pages");
+    const data = await res.json();
+    setForm(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchContentPages();
+  }, [fetchContentPages]);
+
+  const updatePage = (key: ContentPageKey, next: ContentPageConfig) => {
+    setForm((prev) => (prev ? { ...prev, [key]: next } : prev));
+  };
+
+  const updateListItems = (key: ContentPageKey, value: string) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+      const listItems = value
+        .split("\n")
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+      return { ...prev, [key]: { ...prev[key], listItems } };
+    });
+  };
+
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form) return;
+    setSaving(true);
+    setMessage("");
+
+    const res = await fetch("/api/admin/settings/content-pages", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    setSaving(false);
+    if (!res.ok) {
+      setMessage("Failed to save content pages.");
+      return;
+    }
+    setMessage("Content pages saved.");
+  };
+
+  if (loading) return <p className="text-sm text-gray-500">Loading content pages...</p>;
+  if (!form) return <p className="text-sm text-gray-500">Content pages are unavailable.</p>;
+
+  return (
+    <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+      <p className="text-sm text-gray-500">Edit the text shown inside the About, Contact, and How To Buy pages.</p>
+
+      {CONTENT_PAGE_FIELDS.map((field) => {
+        const page = form[field.key];
+        return (
+          <div key={field.key} className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-wide">{field.label}</h3>
+            <Input
+              label="Page Title"
+              value={page.title}
+              onChange={(e) => updatePage(field.key, { ...page, title: e.target.value })}
+            />
+            <Textarea
+              label="Page Body"
+              value={page.body}
+              onChange={(e) => updatePage(field.key, { ...page, body: e.target.value })}
+              rows={5}
+            />
+            {field.supportsList && (
+              <Textarea
+                label="Steps / List Items"
+                value={page.listItems.join("\n")}
+                onChange={(e) => updateListItems(field.key, e.target.value)}
+                rows={6}
+              />
+            )}
+          </div>
+        );
+      })}
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Content Pages"}</Button>
+        {message && <p className="text-sm text-gray-600">{message}</p>}
+      </div>
+    </form>
   );
 }
 
