@@ -6,6 +6,8 @@ import { Cormorant_Garamond } from "next/font/google";
 import { StorefrontLanguageProvider } from "@/components/storefront/StorefrontLanguageProvider";
 import { SearchOverlayProvider } from "@/components/storefront/SearchOverlayProvider";
 
+export const dynamic = "force-dynamic";
+
 const cormorant = Cormorant_Garamond({
     subsets: ["latin"],
     weight: ["400", "600"],
