@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
@@ -7,6 +8,25 @@ import { authConfig } from "./auth.config";
 import { rateLimit } from "@/lib/rate-limit";
 
 type Role = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
+
+const GOOGLE_ADMIN_EMAIL = "khanchowdhuryn@gmail.com";
+
+const getGoogleProviders = () => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return [];
+  }
+
+  return [
+    Google({
+      clientId,
+      clientSecret,
+      allowDangerousEmailAccountLinking: true,
+    }),
+  ];
+};
 
 declare module "next-auth" {
   interface Session {
@@ -42,7 +62,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     updateAge: 60 * 30,
   },
   adapter: PrismaAdapter(db) as never,
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user }) {
+      if (user.email?.toLowerCase() !== GOOGLE_ADMIN_EMAIL) {
+        return true;
+      }
+
+      await db.user.update({
+        where: { id: user.id },
+        data: { role: "ADMIN", emailVerified: new Date() },
+      });
+      (user as unknown as Record<string, unknown>).role = "ADMIN";
+      return true;
+    },
+  },
   providers: [
+    ...getGoogleProviders(),
     Credentials({
       name: "credentials",
       credentials: {

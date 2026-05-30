@@ -22,6 +22,21 @@ async function main() {
   });
   console.log(`  ✓ Admin user: ${admin.email}`);
 
+  const googleAdmin = await db.user.upsert({
+    where: { email: "khanchowdhuryn@gmail.com" },
+    update: {
+      role: "ADMIN",
+      emailVerified: new Date(),
+    },
+    create: {
+      name: "Khan Chowdhury",
+      email: "khanchowdhuryn@gmail.com",
+      role: "ADMIN",
+      emailVerified: new Date(),
+    },
+  });
+  console.log(`  ✓ Google admin user: ${googleAdmin.email}`);
+
   // Create categories
   const categories = [
     { name: "Phone Case", slug: "phone-case", sortOrder: 1 },

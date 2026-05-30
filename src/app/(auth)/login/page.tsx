@@ -33,6 +33,12 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    await signIn("google", { callbackUrl: "/" });
+  };
+
   return (
     <div className="w-full max-w-md mx-auto p-8">
       <div className="text-center mb-8">
@@ -99,6 +105,14 @@ export default function LoginPage() {
           className="w-full bg-black text-white py-3 text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
           {loading ? "Signing in..." : "Sign In"}
+        </button>
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full border border-gray-300 bg-white py-3 text-sm font-bold uppercase tracking-wide hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Continue with Google
         </button>
       </form>
 
