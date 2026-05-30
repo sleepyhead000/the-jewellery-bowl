@@ -18,6 +18,7 @@ import {
 import { auth } from "@/lib/auth";
 import { hasPermission, type Permission } from "@/lib/permissions";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import AdminMobileNav, { type AdminNavIcon } from "./_components/AdminMobileNav";
 
 const adminIconMap = {
@@ -107,12 +108,7 @@ export default async function AdminLayout({
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button className="relative transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]" type="button" aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full text-[10px] text-white flex items-center justify-center font-bold bg-[var(--color-danger)]">
-                !
-              </span>
-            </button>
+            <NotificationBell href="/admin/notifications" compact={false} />
             <div className="h-8 w-8 rounded-full bg-[var(--color-surface)] flex items-center justify-center text-xs font-bold">
               A
             </div>

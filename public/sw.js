@@ -4,6 +4,9 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "You have a new notification",
     icon: "/favicon.ico",
+    badge: "/favicon.ico",
+    tag: data.tag || data.data?.entityId || "the-jewellery-bowl-notification",
+    vibrate: data.vibrate || [180, 80, 180],
     data: data.data || {},
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -11,6 +14,6 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow("/admin"));
+  const targetUrl = event.notification.data?.url || "/";
+  event.waitUntil(clients.openWindow(targetUrl));
 });
-

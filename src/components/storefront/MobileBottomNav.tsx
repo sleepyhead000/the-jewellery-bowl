@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingBag, User, Grid2x2 } from "lucide-react";
+import { Bell, Search, ShoppingBag, User, Grid2x2 } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchOverlay } from "@/components/storefront/SearchOverlayProvider";
 
@@ -10,6 +10,7 @@ const links = [
     { href: "/products", label: "Categories", icon: Grid2x2 },
     { href: "/search", label: "Search", icon: Search },
     { href: "/cart", label: "Cart", icon: ShoppingBag },
+    { href: "/account/notifications", label: "Alerts", icon: Bell },
     { href: "/account", label: "Account", icon: User },
 ];
 
@@ -41,7 +42,7 @@ export default function MobileBottomNav() {
                                 key={href}
                                 type="button"
                                 onClick={open}
-                                className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-10 px-2 rounded-2xl transition-all duration-200"
+                                className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-10 px-1.5 rounded-2xl transition-all duration-200"
                                 style={{
                                     color: "color-mix(in oklab, #f7f0ea 72%, #746764 28%)",
                                     background: "transparent",
@@ -61,7 +62,7 @@ export default function MobileBottomNav() {
                         <Link
                             key={href}
                             href={href}
-                            className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-10 px-2 rounded-2xl transition-all duration-200"
+                            className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-10 px-1.5 rounded-2xl transition-all duration-200"
                             style={{
                                 color: active ? "#f7f0ea" : "color-mix(in oklab, #f7f0ea 72%, #746764 28%)",
                                 background: active ? "color-mix(in oklab, #f7f0ea 10%, #2a2424 90%)" : "transparent",

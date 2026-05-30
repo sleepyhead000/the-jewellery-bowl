@@ -1,7 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { notifyOrderStatusChanged } from "@/lib/discord";
-import { sendAdminPushNotification } from "@/lib/push";
+import { sendAdminPushNotification, sendUserPushNotification } from "@/lib/push";
 
 type PaymentAction = "verify" | "reject";
 
@@ -23,6 +23,7 @@ type PaymentActionResult = {
   orderStatus: string;
   paymentId: string;
   paymentStatus: string;
+  userId: string;
 };
 
 export class PaymentActionError extends Error {
@@ -108,6 +109,7 @@ export async function applyPaymentAction(input: PaymentActionInput): Promise<Pay
         orderStatus: "CONFIRMED",
         paymentId: order.payment.id,
         paymentStatus: "VERIFIED",
+        userId: order.userId,
       };
     }
 
@@ -144,6 +146,7 @@ export async function applyPaymentAction(input: PaymentActionInput): Promise<Pay
       orderStatus: "CANCELLED",
       paymentId: order.payment.id,
       paymentStatus: "REJECTED",
+      userId: order.userId,
     };
   });
 
@@ -160,6 +163,18 @@ export async function applyPaymentAction(input: PaymentActionInput): Promise<Pay
       input.action === "verify"
         ? `Order moved to CONFIRMED by ${actorName}.`
         : `Order cancelled and stock restored by ${actorName}.`,
+    type: input.action === "verify" ? "PAYMENT_VERIFIED" : "PAYMENT_REJECTED",
+    priority: "HIGH",
+    entity: "order",
+    entityId: result.orderId,
+  }).catch(console.error);
+
+  sendUserPushNotification(result.userId, {
+    title: `Payment ${input.action === "verify" ? "verified" : "rejected"}`,
+    message:
+      input.action === "verify"
+        ? `Your order ${result.orderNumber} has been confirmed.`
+        : `Your payment for ${result.orderNumber} was rejected. Check the order for details.`,
     type: input.action === "verify" ? "PAYMENT_VERIFIED" : "PAYMENT_REJECTED",
     priority: "HIGH",
     entity: "order",

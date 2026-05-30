@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { notifyOrderStatusChanged } from "@/lib/discord";
-import { sendAdminPushNotification } from "@/lib/push";
+import { sendAdminPushNotification, sendUserPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { validateOriginForMutations } from "@/lib/api-security";
 import { applyPaymentAction, PaymentActionError } from "@/lib/payment-actions";
@@ -132,6 +132,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     sendAdminPushNotification({
       title: `Order status updated: ${order.orderNumber}`,
       message: `Status changed to ${status}.`,
+      type: "ORDER_STATUS_UPDATED",
+      priority: "MEDIUM",
+      entity: "order",
+      entityId: id,
+    }).catch(console.error);
+
+    sendUserPushNotification(order.userId, {
+      title: `Order ${order.orderNumber} updated`,
+      message: `Your order status is now ${status}.`,
       type: "ORDER_STATUS_UPDATED",
       priority: "MEDIUM",
       entity: "order",

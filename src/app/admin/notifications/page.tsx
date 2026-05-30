@@ -1,88 +1,112 @@
 "use client";
 
-import { useState } from "react";
-import { adminApiFetch, mapAdminApiError } from "@/lib/admin-api-client";
+import { useEffect, useState } from "react";
+import { Bell, Check, CheckCheck } from "lucide-react";
+import { Badge, Button } from "@/components/ui";
+import PushNotificationControl from "@/components/notifications/PushNotificationControl";
 import { useAdminCapabilities } from "@/hooks/use-admin-capabilities";
 
+type NotificationItem = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  data: Record<string, unknown>;
+};
+
 export default function AdminNotificationsPage() {
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { can, loading: loadingCapabilities } = useAdminCapabilities();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { can } = useAdminCapabilities();
   const canSend = can("notifications.send");
 
-  const subscribe = async () => {
-    if (!canSend) {
-      setStatus("Insufficient permission for this action.");
-      return;
-    }
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setStatus("Push notifications are not supported in this browser.");
-      return;
-    }
+  const fetchNotifications = async (): Promise<void> => {
+    const res = await fetch("/api/notifications?limit=50");
+    const data = await res.json();
+    setNotifications(data.notifications || []);
+    setUnreadCount(data.unreadCount || 0);
+    setLoading(false);
+  };
 
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      setStatus("Notification permission denied.");
-      return;
-    }
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-    const reg = await navigator.serviceWorker.register("/sw.js");
-    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!vapidKey) {
-      setStatus("VAPID public key is not configured.");
-      return;
-    }
-
-    const key = Uint8Array.from(atob(vapidKey.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: key,
+  const markAllRead = async (): Promise<void> => {
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ all: true }),
     });
-
-    try {
-      await adminApiFetch("/api/push-subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub),
-      });
-      setStatus("Push subscription enabled.");
-    } catch (error: unknown) {
-      setStatus(mapAdminApiError(error));
-    }
+    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
+    setUnreadCount(0);
   };
 
-  const sendTest = async () => {
-    if (!canSend) {
-      setStatus("Insufficient permission for this action.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await adminApiFetch("/api/admin/notifications/test", { method: "POST" });
-      setStatus("Test notification sent.");
-    } catch (error: unknown) {
-      setStatus(mapAdminApiError(error));
-    } finally {
-      setLoading(false);
-    }
+  const markRead = async (id: string): Promise<void> => {
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: [id] }),
+    });
+    setNotifications((items) => items.map((item) => (item.id === id ? { ...item, isRead: true } : item)));
+    setUnreadCount((count) => Math.max(0, count - 1));
   };
+
+  if (loading) return <div className="p-6 text-sm text-gray-400">Loading notifications...</div>;
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold uppercase tracking-tight">Admin Notifications</h1>
-        <p className="text-sm text-gray-500 mt-1">Enable web push and send test alerts.</p>
+        <h1 className="text-2xl font-bold uppercase tracking-tight">Notifications</h1>
+        <p className="mt-1 text-sm text-gray-500">Review alerts and enable mobile push for this device.</p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-        <button onClick={subscribe} disabled={!canSend || loadingCapabilities} className="w-full sm:w-auto px-4 py-2 bg-black text-white rounded-md text-sm font-semibold disabled:opacity-50">
-          Enable Browser Push
-        </button>
-        <button onClick={sendTest} disabled={loading || !canSend || loadingCapabilities} className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-semibold sm:ml-3 disabled:opacity-50">
-          {loading ? "Sending..." : "Send Test Notification"}
-        </button>
-        {status ? <p className="text-sm text-gray-700">{status}</p> : null}
+      <PushNotificationControl allowTest={canSend} />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-bold uppercase tracking-wide">Recent Alerts</h2>
+          {unreadCount > 0 ? <Badge variant="warning">{unreadCount} unread</Badge> : null}
+        </div>
+        {unreadCount > 0 ? (
+          <Button size="sm" variant="outline" onClick={markAllRead} className="w-full gap-2 sm:w-auto">
+            <CheckCheck className="h-3.5 w-3.5" /> Mark all read
+          </Button>
+        ) : null}
       </div>
+
+      {notifications.length === 0 ? (
+        <div className="border border-gray-200 bg-white py-16 text-center">
+          <Bell className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <p className="text-gray-500">No notifications yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`flex items-start gap-3 border p-4 transition-colors ${
+                notification.isRead ? "border-gray-100 bg-white" : "border-amber-200 bg-amber-50"
+              }`}
+            >
+              <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-transparent" : "bg-amber-500"}`} />
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-medium">{notification.title}</p>
+                <p className="mt-0.5 break-words text-sm text-gray-500">{notification.message}</p>
+                <p className="mt-1 text-xs text-gray-400">{new Date(notification.createdAt).toLocaleString()}</p>
+              </div>
+              {!notification.isRead ? (
+                <button onClick={() => markRead(notification.id)} className="shrink-0 p-1.5 text-gray-400 hover:text-black" title="Mark read" type="button">
+                  <Check className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

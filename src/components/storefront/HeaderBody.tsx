@@ -9,6 +9,7 @@ import { useStorefrontLanguage } from "@/components/storefront/StorefrontLanguag
 import HeaderLanguageToggle from "@/components/storefront/HeaderLanguageToggle";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useSearchOverlay } from "@/components/storefront/SearchOverlayProvider";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 type HeaderBodyProps = {
     translations: HomepageTranslationsConfig;
@@ -117,6 +118,7 @@ export default function HeaderBody({
                             <Search className="h-[19px] w-[19px] md:h-[22px] md:w-[22px]" strokeWidth={1.7} />
                         </button>
                         <Link href="/account/wishlist" className="p-1 header-pill-icon-link hover:text-[var(--color-accent)] md:hover:text-[#d9c8ba] transition-colors"><Heart className="h-[19px] w-[19px] md:h-[22px] md:w-[22px]" strokeWidth={1.7} /></Link>
+                        <NotificationBell href="/account/notifications" compact={true} />
                         <Link href="/cart" className="p-1 header-pill-icon-link hover:text-[var(--color-accent)] md:hover:text-[#d9c8ba] transition-colors"><ShoppingBag className="h-[19px] w-[19px] md:h-[22px] md:w-[22px]" strokeWidth={1.7} /></Link>
                         <Link href="/account" className="p-1 header-pill-icon-link hover:text-[var(--color-accent)] md:hover:text-[#d9c8ba] transition-colors"><User className="h-[19px] w-[19px] md:h-[22px] md:w-[22px]" strokeWidth={1.7} /></Link>
                     </div>

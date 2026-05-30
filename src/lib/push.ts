@@ -10,23 +10,22 @@ if (publicKey && privateKey) {
   webpush.setVapidDetails(subject, publicKey, privateKey);
 }
 
-export async function sendAdminPushNotification(input: {
+type PushNotificationInput = {
   title: string;
   message: string;
   type: string;
   priority?: "LOW" | "MEDIUM" | "HIGH";
   entity?: string;
   entityId?: string;
-}) {
-  const admins = await db.user.findMany({
-    where: { role: { in: ["STAFF", "MANAGER", "ADMIN"] } },
-    select: { id: true },
-  });
-  const adminIds = admins.map((u) => u.id);
-  if (!adminIds.length) return;
+  url: string;
+};
+
+const sendPushToUsers = async (userIds: string[], input: PushNotificationInput): Promise<void> => {
+  const uniqueUserIds = Array.from(new Set(userIds));
+  if (!uniqueUserIds.length) return;
 
   await db.notification.createMany({
-    data: adminIds.map((id) => ({
+    data: uniqueUserIds.map((id) => ({
       userId: id,
       title: input.title,
       message: input.message,
@@ -37,6 +36,7 @@ export async function sendAdminPushNotification(input: {
         priority: input.priority || "MEDIUM",
         entity: input.entity || null,
         entityId: input.entityId || null,
+        url: input.url,
       },
     })),
   });
@@ -49,17 +49,20 @@ export async function sendAdminPushNotification(input: {
   }
 
   const subs = await db.pushSubscription.findMany({
-    where: { userId: { in: adminIds } },
+    where: { userId: { in: uniqueUserIds } },
   });
 
   const payload = JSON.stringify({
     title: input.title,
     body: input.message,
+    vibrate: input.priority === "LOW" ? [120] : [180, 80, 180],
+    tag: input.entityId || input.type,
     data: {
       type: input.type,
       priority: input.priority || "MEDIUM",
       entity: input.entity || null,
       entityId: input.entityId || null,
+      url: input.url,
     },
   });
 
@@ -72,5 +75,28 @@ export async function sendAdminPushNotification(input: {
       await db.pushSubscription.delete({ where: { id: sub.id } }).catch(() => null);
     }
   }
+};
+
+export async function sendAdminPushNotification(input: Omit<PushNotificationInput, "url"> & { url?: string }) {
+  const admins = await db.user.findMany({
+    where: { role: { in: ["STAFF", "MANAGER", "ADMIN"] } },
+    select: { id: true },
+  });
+  const adminIds = admins.map((u) => u.id);
+  const url =
+    input.url ??
+    (input.entity === "order" && input.entityId ? `/admin/orders/${input.entityId}` : "/admin/notifications");
+
+  await sendPushToUsers(adminIds, { ...input, url });
 }
 
+export async function sendUserPushNotification(
+  userId: string,
+  input: Omit<PushNotificationInput, "url"> & { url?: string }
+) {
+  const url =
+    input.url ??
+    (input.entity === "order" && input.entityId ? `/account/orders/${input.entityId}` : "/account/notifications");
+
+  await sendPushToUsers([userId], { ...input, url });
+}

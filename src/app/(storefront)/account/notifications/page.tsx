@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bell, Check, CheckCheck } from "lucide-react";
 import { Button, Badge } from "@/components/ui";
+import PushNotificationControl from "@/components/notifications/PushNotificationControl";
 
 interface NotificationItem {
   id: string;
@@ -65,6 +66,10 @@ export default function NotificationsPage() {
         )}
       </div>
 
+      <div className="mb-6">
+        <PushNotificationControl allowTest={false} />
+      </div>
+
       {notifications.length === 0 ? (
         <div className="text-center py-16">
           <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -97,4 +102,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-

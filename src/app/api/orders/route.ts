@@ -4,7 +4,7 @@ import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyPaymentSubmitted } from "@/lib/discord";
-import { sendAdminPushNotification } from "@/lib/push";
+import { sendAdminPushNotification, sendUserPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { validateOriginForMutations } from "@/lib/api-security";
 import { z } from "zod";
@@ -271,6 +271,15 @@ export async function POST(req: NextRequest) {
     message: `Payment submitted via ${paymentMethod}. Review in admin panel.`,
     type: "ORDER_CREATED",
     priority: "HIGH",
+    entity: "order",
+    entityId: order.id,
+  }).catch(console.error);
+
+  sendUserPushNotification(session.user.id, {
+    title: `Order received ${order.orderNumber}`,
+    message: "We received your order and will update you as it progresses.",
+    type: "ORDER_CREATED",
+    priority: "MEDIUM",
     entity: "order",
     entityId: order.id,
   }).catch(console.error);
