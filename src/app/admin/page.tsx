@@ -71,7 +71,7 @@ export default function AdminDashboard() {
         <StatCard icon={DollarSign} label="Today's Revenue" value={formatPrice(stats.todayRevenue)} />
         <StatCard icon={Clock} label="Today's Orders" value={String(stats.todayOrders)} />
         <StatCard icon={ShoppingCart} label="Pending Orders" value={String(stats.pendingOrders)} highlight={stats.pendingOrders > 0} />
-        <StatCard icon={CreditCard} label="Pending Payments" value={String(stats.pendingPayments)} highlight={stats.pendingPayments > 0} />
+        <StatCard icon={CreditCard} label="Pending Payments" value={String(stats.pendingPayments)} highlight={stats.pendingPayments > 0} href="/admin/payments?status=PENDING_VERIFICATION" />
         <StatCard icon={Users} label="Customers" value={String(stats.totalCustomers)} />
         <StatCard icon={Package} label="Products" value={String(stats.totalProducts)} />
       </div>
@@ -140,13 +140,15 @@ function StatCard({
   label,
   value,
   highlight,
+  href,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   highlight?: boolean;
+  href?: string;
 }) {
-  return (
+  const content = (
     <div className={`bg-white rounded-lg border p-5 ${highlight ? "border-amber-300" : "border-gray-200"}`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</span>
@@ -155,4 +157,10 @@ function StatCard({
       <p className={`text-2xl font-bold ${highlight ? "text-amber-600" : ""}`}>{value}</p>
     </div>
   );
+
+  if (href) {
+    return <Link href={href} className="block transition-opacity hover:opacity-80">{content}</Link>;
+  }
+
+  return content;
 }

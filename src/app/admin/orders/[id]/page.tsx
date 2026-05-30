@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle, Truck } from "lucide-react";
 import { Button, Badge, Input } from "@/components/ui";
@@ -154,9 +155,14 @@ export default function AdminOrderDetailPage({ params }: Props) {
             <section className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold uppercase tracking-wide">Payment Details</h2>
-                <Badge variant={payment.status === "VERIFIED" ? "success" : payment.status === "REJECTED" ? "danger" : "warning"}>
-                  {String(payment.status)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Link href={`/admin/payments/${String(payment.id)}`} className="text-xs font-bold uppercase text-gray-400 hover:text-black">
+                    Open Payment
+                  </Link>
+                  <Badge variant={payment.status === "VERIFIED" ? "success" : payment.status === "REJECTED" ? "danger" : "warning"}>
+                    {String(payment.status)}
+                  </Badge>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">

@@ -11,6 +11,7 @@ import {
   UserCog,
   BarChart3,
   Bell,
+  CreditCard,
   Settings,
   Megaphone,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const adminIconMap = {
   dashboard: LayoutDashboard,
   products: Package,
   orders: ShoppingCart,
+  payments: CreditCard,
   customers: Users,
   categories: FolderTree,
   coupons: Tag,
@@ -38,6 +40,7 @@ const sidebarLinks: Array<{ name: string; href: string; icon: AdminNavIcon; perm
   { name: "Dashboard", href: "/admin", icon: "dashboard", permission: "orders.view" },
   { name: "Products", href: "/admin/products", icon: "products", permission: "products.view" },
   { name: "Orders", href: "/admin/orders", icon: "orders", permission: "orders.view" },
+  { name: "Payments", href: "/admin/payments", icon: "payments", permission: "payments.verify" },
   { name: "Customers", href: "/admin/customers", icon: "customers", permission: "customers.view" },
   { name: "Categories", href: "/admin/categories", icon: "categories", permission: "categories.manage" },
   { name: "Coupons", href: "/admin/coupons", icon: "coupons", permission: "coupons.manage" },

@@ -6,6 +6,7 @@ import { notifyOrderStatusChanged } from "@/lib/discord";
 import { sendAdminPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { validateOriginForMutations } from "@/lib/api-security";
+import { applyPaymentAction, PaymentActionError } from "@/lib/payment-actions";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -91,96 +92,19 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   // Handle payment verification
   if (paymentAction && order.payment) {
-    if (paymentAction === "verify") {
-      await db.payment.update({
-        where: { id: order.payment.id },
-        data: {
-          status: "VERIFIED",
-          verifiedBy: session.user.id,
-          verifiedAt: new Date(),
-          adminNote,
-        },
+    try {
+      const result = await applyPaymentAction({
+        orderId: id,
+        action: paymentAction,
+        adminNote: adminNote?.trim() ? adminNote.trim() : null,
+        actor: { id: session.user.id, name: session.user.name },
       });
-
-      await db.order.update({
-        where: { id },
-        data: { status: "CONFIRMED" },
-      });
-      await db.auditLog.create({
-        data: {
-          userId: session.user.id,
-          action: "PAYMENT_VERIFIED",
-          entity: "ORDER",
-          entityId: id,
-          details: { paymentId: order.payment.id, adminNote: adminNote || null },
-        },
-      });
-
-      notifyOrderStatusChanged({
-        orderNumber: order.orderNumber,
-        status: "CONFIRMED",
-        adminName: session.user.name || "Admin",
-      }).catch(console.error);
-      sendAdminPushNotification({
-        title: `Payment verified: ${order.orderNumber}`,
-        message: `Order moved to CONFIRMED by ${session.user.name || "Admin"}.`,
-        type: "PAYMENT_VERIFIED",
-        priority: "HIGH",
-        entity: "order",
-        entityId: id,
-      }).catch(console.error);
-
-      return NextResponse.json({ success: true, status: "CONFIRMED" });
-    }
-
-    if (paymentAction === "reject") {
-      await db.payment.update({
-        where: { id: order.payment.id },
-        data: {
-          status: "REJECTED",
-          verifiedBy: session.user.id,
-          verifiedAt: new Date(),
-          adminNote,
-        },
-      });
-
-      // Restore stock
-      for (const item of order.items) {
-        await db.productVariant.update({
-          where: { id: item.variantId },
-          data: { stock: { increment: item.quantity } },
-        });
+      return NextResponse.json({ success: true, status: result.orderStatus });
+    } catch (error) {
+      if (error instanceof PaymentActionError) {
+        return NextResponse.json({ error: error.message }, { status: error.status });
       }
-
-      await db.order.update({
-        where: { id },
-        data: { status: "CANCELLED" },
-      });
-      await db.auditLog.create({
-        data: {
-          userId: session.user.id,
-          action: "PAYMENT_REJECTED",
-          entity: "ORDER",
-          entityId: id,
-          details: { paymentId: order.payment.id, adminNote: adminNote || null },
-        },
-      });
-
-      notifyOrderStatusChanged({
-        orderNumber: order.orderNumber,
-        status: "CANCELLED",
-        adminName: session.user.name || "Admin",
-      }).catch(console.error);
-      sendAdminPushNotification({
-        title: `Payment rejected: ${order.orderNumber}`,
-        message: `Order cancelled and stock restored by ${session.user.name || "Admin"}.`,
-        type: "PAYMENT_REJECTED",
-        priority: "HIGH",
-        entity: "order",
-        entityId: id,
-      }).catch(console.error);
-
-      return NextResponse.json({ success: true, status: "CANCELLED" });
+      throw error;
     }
   }
 

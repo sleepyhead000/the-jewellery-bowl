@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   BarChart3,
   Bell,
+  CreditCard,
   FolderTree,
   LayoutDashboard,
   Megaphone,
@@ -24,6 +25,7 @@ export type AdminNavIcon =
   | "dashboard"
   | "products"
   | "orders"
+  | "payments"
   | "customers"
   | "categories"
   | "coupons"
@@ -48,6 +50,7 @@ const iconMap = {
   dashboard: LayoutDashboard,
   products: Package,
   orders: ShoppingCart,
+  payments: CreditCard,
   customers: Users,
   categories: FolderTree,
   coupons: Tag,
