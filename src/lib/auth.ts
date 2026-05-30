@@ -11,6 +11,10 @@ type Role = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
 
 const GOOGLE_ADMIN_EMAIL = "khanchowdhuryn@gmail.com";
 
+const isGoogleAdminEmail = (email: string | null | undefined): boolean => {
+  return email?.toLowerCase() === GOOGLE_ADMIN_EMAIL;
+};
+
 const getGoogleProviders = () => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -63,18 +67,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   adapter: PrismaAdapter(db) as never,
   callbacks: {
-    ...authConfig.callbacks,
-    async signIn({ user }) {
-      if (user.email?.toLowerCase() !== GOOGLE_ADMIN_EMAIL) {
-        return true;
+    async signIn() {
+      return true;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id!;
+        token.phone = (user as unknown as Record<string, unknown>).phone as string | null;
+        token.role = ((user as unknown as Record<string, unknown>).role as Role | undefined) ?? "CUSTOMER";
       }
 
-      await db.user.update({
-        where: { id: user.id },
-        data: { role: "ADMIN", emailVerified: new Date() },
-      });
-      (user as unknown as Record<string, unknown>).role = "ADMIN";
-      return true;
+      if (isGoogleAdminEmail(token.email)) {
+        await db.user.updateMany({
+          where: { email: GOOGLE_ADMIN_EMAIL },
+          data: { role: "ADMIN", emailVerified: new Date() },
+        });
+        token.role = "ADMIN";
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      session.user.id = token.id as string;
+      session.user.phone = token.phone as string | null;
+      session.user.role = token.role as Role;
+      return session;
     },
   },
   providers: [
