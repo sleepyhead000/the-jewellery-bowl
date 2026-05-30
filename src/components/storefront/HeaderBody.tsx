@@ -10,6 +10,7 @@ import HeaderLanguageToggle from "@/components/storefront/HeaderLanguageToggle";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useSearchOverlay } from "@/components/storefront/SearchOverlayProvider";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import type { FooterLinkConfig } from "@/lib/footer-config";
 
 type HeaderBodyProps = {
     translations: HomepageTranslationsConfig;
@@ -17,6 +18,7 @@ type HeaderBodyProps = {
     topbarStaticText: { en: string; bn: string };
     topbarMode: "announcements" | "static";
     topbarEnabled: boolean;
+    headerLinks: FooterLinkConfig[];
 };
 
 export default function HeaderBody({
@@ -25,6 +27,7 @@ export default function HeaderBody({
     topbarStaticText,
     topbarMode,
     topbarEnabled,
+    headerLinks,
 }: HeaderBodyProps) {
     const { locale } = useStorefrontLanguage();
     const { open } = useSearchOverlay();
@@ -101,9 +104,15 @@ export default function HeaderBody({
                     <nav className="hidden md:flex items-center gap-6 text-[0.9rem] h-full">
                         <Link href="/" className="text-[var(--color-accent)] leading-none inline-flex items-center">{pickLocalizedText(translations.navHome, locale)}</Link>
                         <Link href="/products" className="text-[var(--color-text-primary)] leading-none inline-flex items-center">{pickLocalizedText(translations.navProducts, locale)}</Link>
-                        <Link href="/about" className="text-[var(--color-text-primary)] leading-none inline-flex items-center">{pickLocalizedText(translations.navAbout, locale)}</Link>
-                        <Link href="/contact" className="text-[var(--color-text-primary)] leading-none inline-flex items-center">{pickLocalizedText(translations.navContact, locale)}</Link>
-                        <Link href="/how-to-buy" className="text-[var(--color-text-primary)] leading-none inline-flex items-center">{pickLocalizedText(translations.navHowToBuy, locale)}</Link>
+                        {headerLinks.map((link) => (
+                            <Link
+                                key={`${link.href}-${link.label}`}
+                                href={link.href}
+                                className="text-[var(--color-text-primary)] leading-none inline-flex items-center"
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </nav>
 
                     <div

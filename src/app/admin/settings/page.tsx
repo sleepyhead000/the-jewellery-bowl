@@ -93,7 +93,11 @@ function FooterSettingsSection() {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  const updateLink = (group: "shopLinks" | "supportLinks" | "legalLinks", index: number, next: FooterLinkConfig) => {
+  const updateLink = (
+    group: "headerLinks" | "shopLinks" | "supportLinks" | "legalLinks",
+    index: number,
+    next: FooterLinkConfig
+  ) => {
     setForm((prev) => {
       if (!prev) return prev;
       return { ...prev, [group]: prev[group].map((entry, i) => (i === index ? next : entry)) };
@@ -132,7 +136,7 @@ function FooterSettingsSection() {
 
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
-      <p className="text-sm text-gray-500">Control the storefront footer copy, footer links, and social media URLs.</p>
+      <p className="text-sm text-gray-500">Control storefront header links, footer copy, footer links, and social media URLs.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Input label="Brand Name" value={form.brandName} onChange={(e) => updateField("brandName", e.target.value)} />
@@ -148,6 +152,7 @@ function FooterSettingsSection() {
         rows={4}
       />
 
+      <FooterLinksEditor title="Header Links" links={form.headerLinks} onChange={(index, next) => updateLink("headerLinks", index, next)} />
       <FooterLinksEditor title="Shop Links" links={form.shopLinks} onChange={(index, next) => updateLink("shopLinks", index, next)} />
       <FooterLinksEditor title="Support Links" links={form.supportLinks} onChange={(index, next) => updateLink("supportLinks", index, next)} />
       <FooterLinksEditor title="Legal Links" links={form.legalLinks} onChange={(index, next) => updateLink("legalLinks", index, next)} />

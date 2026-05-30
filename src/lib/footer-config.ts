@@ -15,6 +15,7 @@ export type FooterSettingsConfig = {
   newsletterTitle: string;
   newsletterDescription: string;
   newsletterButtonLabel: string;
+  headerLinks: FooterLinkConfig[];
   shopLinks: FooterLinkConfig[];
   supportLinks: FooterLinkConfig[];
   legalLinks: FooterLinkConfig[];
@@ -28,6 +29,11 @@ export const defaultFooterSettings: FooterSettingsConfig = {
   newsletterTitle: "Get 10% Off",
   newsletterDescription: "Join our list and get 10% off your first order.",
   newsletterButtonLabel: "Join",
+  headerLinks: [
+    { label: "About Us", href: "/about" },
+    { label: "Contact", href: "/contact" },
+    { label: "How To Buy", href: "/how-to-buy" },
+  ],
   shopLinks: [
     { label: "All Products", href: "/products" },
     { label: "New Arrivals", href: "/products?sort=newest" },
@@ -103,6 +109,7 @@ export const normalizeFooterSettings = (input: unknown): FooterSettingsConfig =>
       typeof record.newsletterButtonLabel === "string" && record.newsletterButtonLabel.trim()
         ? record.newsletterButtonLabel.trim()
         : defaultFooterSettings.newsletterButtonLabel,
+    headerLinks: normalizeLinks(record.headerLinks, defaultFooterSettings.headerLinks),
     shopLinks: normalizeLinks(record.shopLinks, defaultFooterSettings.shopLinks),
     supportLinks: normalizeLinks(record.supportLinks, defaultFooterSettings.supportLinks),
     legalLinks: normalizeLinks(record.legalLinks, defaultFooterSettings.legalLinks),
