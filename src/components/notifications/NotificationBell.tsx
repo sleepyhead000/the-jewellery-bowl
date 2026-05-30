@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
-import { Badge, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 
 type NotificationItem = {
   id: string;
@@ -44,7 +44,7 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
   const rootRef = useRef<HTMLDivElement | null>(null);
   const previousUnreadRef = useRef<number>(0);
 
-  const fetchNotifications = async (): Promise<void> => {
+  const fetchNotifications = useCallback(async (): Promise<void> => {
     const res = await fetch("/api/notifications?limit=8", { cache: "no-store" });
     if (res.status === 401) {
       setAuthorized(false);
@@ -61,18 +61,28 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
       vibrateForUnread();
     }
     previousUnreadRef.current = data.unreadCount || 0;
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    const timer = window.setInterval(fetchNotifications, 30000);
-    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
+    const firstFetchTimer = window.setTimeout(() => {
+      void fetchNotifications();
+    }, 0);
+    const intervalTimer = window.setInterval(() => {
+      void fetchNotifications();
+    }, 30000);
+    return () => {
+      window.clearTimeout(firstFetchTimer);
+      window.clearInterval(intervalTimer);
+    };
+  }, [fetchNotifications]);
+
+  useEffect(() => {
     if (!open) return;
-    fetchNotifications();
-  }, [open]);
+    const timer = window.setTimeout(() => {
+      void fetchNotifications();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchNotifications, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -109,16 +119,21 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
 
   if (!authorized) return null;
 
+  const rootClassName = compact ? "relative flex items-center" : "relative";
+  const buttonClassName = compact
+    ? "relative inline-flex items-center justify-center p-1 leading-none text-current transition-colors hover:text-[#d9c8ba]"
+    : "relative inline-flex items-center justify-center leading-none text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]";
+
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={rootClassName}>
       <button
-        className="relative transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+        className={buttonClassName}
         type="button"
         aria-label="Notifications"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <Bell className={compact ? "h-[19px] w-[19px] md:h-[22px] md:w-[22px]" : "h-5 w-5"} />
+        <Bell className={compact ? "h-[19px] w-[19px] md:h-[22px] md:w-[22px]" : "h-5 w-5"} strokeWidth={compact ? 1.7 : 2} />
         {unreadCount > 0 ? (
           <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-danger)] px-1 text-[9px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}

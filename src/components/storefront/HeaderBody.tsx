@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Heart, Search, ShoppingBag, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { HomepageTranslationsConfig } from "@/lib/homepage-config";
+import type { HomepageTranslationsConfig, LocaleCode } from "@/lib/homepage-config";
 import { pickLocalizedText } from "@/lib/homepage-config";
 import { useStorefrontLanguage } from "@/components/storefront/StorefrontLanguageProvider";
 import HeaderLanguageToggle from "@/components/storefront/HeaderLanguageToggle";
@@ -11,6 +11,17 @@ import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useSearchOverlay } from "@/components/storefront/SearchOverlayProvider";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import type { FooterLinkConfig } from "@/lib/footer-config";
+
+const getHeaderLinkLabel = (
+    link: FooterLinkConfig,
+    translations: HomepageTranslationsConfig,
+    locale: LocaleCode
+): string => {
+    if (link.href === "/about") return pickLocalizedText(translations.navAbout, locale);
+    if (link.href === "/contact") return pickLocalizedText(translations.navContact, locale);
+    if (link.href === "/how-to-buy") return pickLocalizedText(translations.navHowToBuy, locale);
+    return link.label;
+};
 
 type HeaderBodyProps = {
     translations: HomepageTranslationsConfig;
@@ -110,7 +121,7 @@ export default function HeaderBody({
                                 href={link.href}
                                 className="text-[var(--color-text-primary)] leading-none inline-flex items-center"
                             >
-                                {link.label}
+                                {getHeaderLinkLabel(link, translations, locale)}
                             </Link>
                         ))}
                     </nav>
