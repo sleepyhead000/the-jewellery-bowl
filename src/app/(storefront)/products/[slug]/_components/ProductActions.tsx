@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingBag, Heart } from "lucide-react";
+import { CreditCard, ShoppingBag, Heart } from "lucide-react";
 import { Button } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/hooks/use-cart";
@@ -37,6 +37,7 @@ export default function ProductActions({
   const [internalSelectedVariant, setInternalSelectedVariant] = useState(variants[0]?.id || "");
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistBusy, setWishlistBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -89,6 +90,24 @@ export default function ProductActions({
       setActionError("Unable to add product to cart.");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const buyNow = async () => {
+    if (!variant) return;
+    try {
+      setBuyingNow(true);
+      setActionError(null);
+      const ok = await addItem(variant.id, quantity);
+      if (!ok) {
+        setActionError("Unable to add product before checkout.");
+        return;
+      }
+      router.push("/checkout");
+    } catch {
+      setActionError("Unable to continue to checkout.");
+    } finally {
+      setBuyingNow(false);
     }
   };
 
@@ -163,7 +182,7 @@ export default function ProductActions({
       )}
 
       {/* Quantity + Cart */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center border border-gray-300">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -180,10 +199,17 @@ export default function ProductActions({
           </button>
         </div>
 
-        <Button onClick={addToCart} disabled={!inStock || adding} className="flex-1">
+        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
+        <Button onClick={addToCart} disabled={!inStock || adding || buyingNow} className="w-full">
           <ShoppingBag className="h-4 w-4 mr-2" />
           {!inStock ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}
         </Button>
+
+        <Button onClick={buyNow} disabled={!inStock || adding || buyingNow} variant="outline" className="w-full">
+          <CreditCard className="h-4 w-4 mr-2" />
+          {!inStock ? "Out of Stock" : buyingNow ? "Opening..." : "Buy Now"}
+        </Button>
+        </div>
 
         <button
           onClick={addToWishlist}
