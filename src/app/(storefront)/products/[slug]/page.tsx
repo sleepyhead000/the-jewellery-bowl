@@ -68,20 +68,20 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
-      <nav className="text-xs text-gray-400 mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
-        <Link href="/" className="hover:text-black transition-colors">Home</Link>
+      <nav className="text-xs text-[var(--color-text-muted)] mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
+        <Link href="/" className="hover:text-[var(--color-text-primary)] transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-black transition-colors">Products</Link>
+        <Link href="/products" className="hover:text-[var(--color-text-primary)] transition-colors">Products</Link>
         {product.category && (
           <>
             <span>/</span>
-            <Link href={`/products?category=${product.category.slug}`} className="hover:text-black transition-colors">
+            <Link href={`/products?category=${product.category.slug}`} className="hover:text-[var(--color-text-primary)] transition-colors">
               {product.category.name}
             </Link>
           </>
         )}
         <span>/</span>
-        <span className="text-gray-600">{product.name}</span>
+        <span className="text-[var(--color-text-secondary)]">{product.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -111,21 +111,21 @@ export default async function ProductDetailPage({ params }: Props) {
           </h2>
           <div className="space-y-6">
             {product.reviews.map((review) => (
-              <div key={review.id} className="border-b border-gray-100 pb-6">
+              <div key={review.id} className="border-b border-[var(--color-border-subtle)] pb-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className={`text-sm ${star <= review.rating ? "text-amber-400" : "text-gray-200"}`}>
+                      <span key={star} className={`text-sm ${star <= review.rating ? "text-[var(--color-brand-highlight)]" : "text-[var(--color-border)]"}`}>
                         ★
                       </span>
                     ))}
                   </div>
                   <span className="text-sm font-medium">{review.user.name}</span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[var(--color-text-muted)]">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                {review.comment && <p className="text-sm text-gray-600">{review.comment}</p>}
+                {review.comment && <p className="text-sm text-[var(--color-text-secondary)]">{review.comment}</p>}
               </div>
             ))}
           </div>

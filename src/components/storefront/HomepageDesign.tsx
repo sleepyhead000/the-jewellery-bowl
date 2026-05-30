@@ -82,7 +82,7 @@ export default function HomepageDesign(props: HomepageDesignProps) {
         const parts = rawTitle.split(/(4 rings|20%)/i);
         return parts.map((part, i) => 
             /^(4 rings|20%)$/i.test(part) ? (
-                <span key={i} className="text-[#b49586]">{part}</span>
+                <span key={i} className="text-[var(--color-brand-highlight)]">{part}</span>
             ) : (
                 <span key={i}>{part}</span>
             )
@@ -93,12 +93,12 @@ export default function HomepageDesign(props: HomepageDesignProps) {
         <div style={{ background: "var(--color-bg)" }}>
             
             {/* HERO SECTION */}
-            <section className="py-0 overflow-hidden" style={{ background: "#352828" }}>
+            <section className="py-0 overflow-hidden" style={{ background: "var(--color-brand-band)" }}>
                 <div className="mx-auto max-w-[1600px] grid grid-cols-2 md:grid-cols-[1.2fr_324px_0.75fr] min-h-[220px] md:min-h-[400px]">
                     <div className="flex flex-col items-center justify-center text-center px-3 py-5 md:px-7 md:py-11 !text-white">
                         <h1 className="text-[15px] md:text-[34px] font-light mb-2 md:mb-3.5 leading-tight" style={{ fontFamily: "var(--font-roboto-condensed), sans-serif" }}>
                             {getText(locale, activeSlide.headingPrefix)}{" "}
-                            <span className="text-[#b49586]">{getText(locale, activeSlide.headingAccent)}</span>
+                            <span className="text-[var(--color-brand-highlight)]">{getText(locale, activeSlide.headingAccent)}</span>
                         </h1>
                         <p className="text-[10px] md:text-[12px] max-w-[150px] md:max-w-[294px] mb-3 md:mb-7 leading-[1.45] md:leading-[1.6] !text-white">
                             {getText(locale, activeSlide.description)}
@@ -134,7 +134,7 @@ export default function HomepageDesign(props: HomepageDesignProps) {
                         <p className="text-sm text-[var(--color-text-secondary)] mb-1">
                             {getText(locale, translations.offersLabel)}
                         </p>
-                        <h2 className="text-2xl md:text-3xl text-[var(--color-text-primary)] font-bold border-b-[3px] border-[#b49586] inline-block pb-1.5">
+                        <h2 className="text-2xl md:text-3xl text-[var(--color-text-primary)] font-bold border-b-[3px] border-[var(--color-brand-highlight)] inline-block pb-1.5">
                             {getText(locale, translations.offersTitle)}
                         </h2>
                     </div>
@@ -148,7 +148,7 @@ export default function HomepageDesign(props: HomepageDesignProps) {
 
             {/* PROMO SPOTLIGHT */}
             {promoSection && (
-                <section className="py-11 md:py-17 mt-6" style={{ background: "#352828" }}>
+                <section className="py-11 md:py-17 mt-6" style={{ background: "var(--color-brand-band)" }}>
                     <div className="container mx-auto max-w-[700px] px-3 md:px-6 grid grid-cols-1 md:grid-cols-2 items-center gap-7 md:gap-11">
                         
                         <div className="relative aspect-square w-full max-w-[280px] mx-auto md:ml-auto">

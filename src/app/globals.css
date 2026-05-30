@@ -23,7 +23,13 @@
   --color-success: #3f6b4b;
   --color-warning: #8a6a2b;
   --color-danger: #8a4343;
+  --color-brand-band: #352828;
+  --color-brand-highlight: #b49586;
   --color-product-card-border: #746764;
+  --color-product-title: var(--color-text-primary);
+  --color-product-price: var(--color-text-secondary);
+  --color-product-sale-price: var(--color-danger);
+  --color-product-compare-price: var(--color-text-muted);
 }
 
 [data-theme="dark"] {
@@ -49,7 +55,13 @@
   --color-success: #5f8f6b;
   --color-warning: #c59b47;
   --color-danger: #b75b5b;
+  --color-brand-band: #352828;
+  --color-brand-highlight: #b49586;
   --color-product-card-border: var(--color-border);
+  --color-product-title: var(--color-text-primary);
+  --color-product-price: var(--color-text-secondary);
+  --color-product-sale-price: var(--color-danger);
+  --color-product-compare-price: var(--color-text-muted);
 }
 
 @theme inline {

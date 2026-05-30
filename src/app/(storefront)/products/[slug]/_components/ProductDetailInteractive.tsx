@@ -57,20 +57,20 @@ export default function ProductDetailInteractive(props: ProductDetailInteractive
 
       <div className="space-y-5 sm:space-y-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight leading-tight">{productName}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight leading-tight text-[var(--color-product-title)]">{productName}</h1>
           {categoryName && (
-            <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">{categoryName}</p>
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wide mt-1">{categoryName}</p>
           )}
         </div>
 
         <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
-          <span className="text-xl sm:text-2xl font-bold">{formatPrice(displayPrice)}</span>
+          <span className="text-xl sm:text-2xl font-bold text-[var(--color-product-price)]">{formatPrice(displayPrice)}</span>
           {selectedVariant?.salePrice ? (
-            <span className="text-sm text-gray-400 line-through">{formatPrice(selectedVariant.price)}</span>
+            <span className="text-sm text-[var(--color-product-compare-price)] line-through">{formatPrice(selectedVariant.price)}</span>
           ) : null}
         </div>
 
-        {description && <p className="text-sm text-gray-600 leading-relaxed">{description}</p>}
+        {description && <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{description}</p>}
 
         <ProductActions
           productId={productId}
@@ -81,9 +81,9 @@ export default function ProductDetailInteractive(props: ProductDetailInteractive
         />
 
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+          <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--color-border-subtle)]">
             {tags.map((tag) => (
-              <span key={tag} className="text-[10px] uppercase tracking-wide text-gray-400 border border-gray-200 px-2 py-1">
+              <span key={tag} className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)] border border-[var(--color-border)] px-2 py-1">
                 {tag}
               </span>
             ))}

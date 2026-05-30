@@ -79,7 +79,7 @@ export default function HeaderBody({
             {topbarEnabled && (
                 <div
                     className="hidden md:flex h-9 px-3 items-center justify-center relative border-b border-[var(--color-border-subtle)]"
-                    style={{ background: "#362828", color: "#f7f0ea" }}
+                    style={{ background: "var(--color-brand-band)", color: "#f7f0ea" }}
                 >
                     <p className="text-[10px] sm:text-[11px] md:text-[12px] tracking-wide font-light leading-normal truncate max-w-[60vw] text-center">
                         {resolvedTopbarText}
@@ -116,7 +116,7 @@ export default function HeaderBody({
                     </nav>
 
                     <div
-                        className="hidden md:flex items-center gap-2 rounded-full bg-[#352828] text-white px-4 py-2 header-icon-pill"
+                        className="hidden md:flex items-center gap-2 rounded-full bg-[var(--color-brand-band)] text-white px-4 py-2 header-icon-pill"
                     >
                         <button
                             type="button"

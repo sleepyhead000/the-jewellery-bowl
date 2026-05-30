@@ -52,11 +52,11 @@ export default async function SearchPage({ searchParams }: Props) {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">Search</h1>
         {query ? (
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-[var(--color-text-secondary)] text-sm mt-1">
             {total} result{total !== 1 ? "s" : ""} for &ldquo;{rawQuery}&rdquo;
           </p>
         ) : (
-          <p className="text-gray-500 text-sm mt-1">Enter a search term above</p>
+          <p className="text-[var(--color-text-secondary)] text-sm mt-1">Enter a search term above</p>
         )}
       </div>
 
@@ -68,12 +68,12 @@ export default async function SearchPage({ searchParams }: Props) {
             name="q"
             defaultValue={rawQuery}
             placeholder="Search products..."
-            className="min-w-0 flex-1 border border-gray-300 border-r-0 px-4 py-3 text-sm outline-none focus:border-black"
+            className="min-w-0 flex-1 border border-[var(--color-border)] border-r-0 bg-[var(--color-elevated)] px-4 py-3 text-sm outline-none focus:border-[var(--color-product-card-border)]"
             autoFocus
           />
           <button
             type="submit"
-            className="shrink-0 bg-black text-white px-4 sm:px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+            className="shrink-0 bg-[var(--color-accent)] text-[var(--color-accent-contrast)] px-4 sm:px-6 py-3 text-sm font-bold uppercase tracking-wide hover:opacity-90 transition-opacity"
           >
             Search
           </button>
@@ -81,7 +81,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </form>
 
       {query && products.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--color-text-muted)]">
           <p className="text-sm">No products found for &ldquo;{rawQuery}&rdquo;</p>
           <p className="text-xs mt-2">Try a different search term</p>
         </div>
@@ -110,7 +110,7 @@ export default async function SearchPage({ searchParams }: Props) {
               key={p}
               href={`/search?q=${encodeURIComponent(query)}&page=${p}`}
               className={`w-10 h-10 flex items-center justify-center text-sm border transition-colors ${
-                p === page ? "bg-black text-white border-black" : "border-gray-300 hover:border-black"
+                p === page ? "bg-[var(--color-accent)] text-[var(--color-accent-contrast)] border-[var(--color-accent)]" : "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
               }`}
             >
               {p}

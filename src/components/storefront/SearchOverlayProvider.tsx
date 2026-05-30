@@ -227,8 +227,8 @@ export const SearchOverlayProvider = ({ children }: SearchOverlayProviderProps) 
                           }}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{item.name}</p>
-                          <p className="text-xs opacity-70">
+                          <p className="truncate text-sm font-medium text-[var(--color-product-title)]">{item.name}</p>
+                          <p className="text-xs text-[var(--color-product-price)]">
                             ৳{((item.salePrice ?? item.price) / 100).toLocaleString()}
                           </p>
                         </div>

@@ -154,7 +154,7 @@ export default function Footer() {
                                 <Link
                                     key={platform}
                                     href={href}
-                                    className="transition-colors duration-200 hover:text-[#C9A84C]"
+                                    className="transition-colors duration-200 hover:text-[var(--color-accent)]"
                                     style={{ color: B.muted }}
                                 >
                                     <Icon className="h-5 w-5" />
@@ -170,7 +170,7 @@ export default function Footer() {
                                 <li key={l.label}>
                                     <Link
                                         href={l.href}
-                                        className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                        className="transition-colors duration-200 hover:text-[var(--color-accent)]"
                                         style={{ color: B.muted }}
                                     >
                                         {l.label}
@@ -187,7 +187,7 @@ export default function Footer() {
                                 <li key={l.label}>
                                     <Link
                                         href={l.href}
-                                        className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                        className="transition-colors duration-200 hover:text-[var(--color-accent)]"
                                         style={{ color: B.muted }}
                                     >
                                         {l.label}
@@ -209,7 +209,7 @@ export default function Footer() {
                             <Link
                                 key={platform}
                                 href={href}
-                                className="transition-colors duration-200 hover:text-[#C9A84C]"
+                                className="transition-colors duration-200 hover:text-[var(--color-accent)]"
                                 style={{ color: B.muted }}
                             >
                                 <Icon className="h-5 w-5" />
@@ -223,7 +223,7 @@ export default function Footer() {
                                 <Link
                                     key={l.label}
                                     href={l.href}
-                                    className="transition-colors duration-200 hover:text-[#E8D9B0]"
+                                    className="transition-colors duration-200 hover:text-[var(--color-accent)]"
                                 >
                                     {l.label}
                                 </Link>

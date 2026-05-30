@@ -153,10 +153,10 @@ export default function ProductActions({
                 onClick={() => { setSelectedVariant(v.id); setQuantity(1); }}
                 className={`min-h-11 px-3 sm:px-4 py-2 text-sm border transition-colors ${
                   v.id === selectedVariant
-                    ? "border-black bg-black text-white"
+                    ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-accent-contrast)]"
                     : v.stock > 0
-                    ? "border-gray-300 hover:border-black"
-                    : "border-gray-200 text-gray-300 cursor-not-allowed"
+                    ? "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
+                    : "border-[var(--color-border-subtle)] text-[var(--color-text-muted)] cursor-not-allowed"
                 }`}
                 disabled={v.stock <= 0}
               >
@@ -170,30 +170,30 @@ export default function ProductActions({
         </div>
       )}
 
-      <p className="text-sm font-medium">
+      <p className="text-sm font-medium text-[var(--color-product-price)]">
         Selected Price ({quantity}): {formatPrice(displayPrice)}
       </p>
-      <p className="text-xs text-gray-500">Unit Price: {formatPrice(unitPrice)}</p>
+      <p className="text-xs text-[var(--color-text-secondary)]">Unit Price: {formatPrice(unitPrice)}</p>
 
       {variant?.name && (
-        <p className="text-xs text-gray-400">
-          Variant: <span className="text-gray-600">{variant.name}</span>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Variant: <span className="text-[var(--color-text-secondary)]">{variant.name}</span>
         </p>
       )}
 
       {/* Quantity + Cart */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex h-11 w-full items-center justify-between border border-gray-300 sm:w-auto">
+        <div className="flex h-11 w-full items-center justify-between border border-[var(--color-border)] sm:w-auto">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="h-full min-w-12 px-3 text-sm hover:bg-gray-50 transition-colors"
+            className="h-full min-w-12 px-3 text-sm hover:bg-[var(--color-surface)] transition-colors"
           >
             −
           </button>
           <span className="px-4 py-2 text-sm font-medium min-w-[3rem] text-center">{quantity}</span>
           <button
             onClick={() => setQuantity((q) => Math.min(variant?.stock || 1, q + 1))}
-            className="h-full min-w-12 px-3 text-sm hover:bg-gray-50 transition-colors"
+            className="h-full min-w-12 px-3 text-sm hover:bg-[var(--color-surface)] transition-colors"
           >
             +
           </button>
@@ -214,7 +214,7 @@ export default function ProductActions({
         <button
           onClick={addToWishlist}
           className={`flex h-11 w-full items-center justify-center border transition-colors sm:w-11 ${
-            wishlisted ? "border-black bg-black text-white" : "border-gray-300 hover:border-black"
+            wishlisted ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-accent-contrast)]" : "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
           }`}
           disabled={wishlistBusy}
           aria-label={wishlisted ? "Remove from favorites" : "Add to favorites"}

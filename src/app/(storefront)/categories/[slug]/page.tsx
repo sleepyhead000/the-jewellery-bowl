@@ -61,25 +61,25 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
       {/* Breadcrumb */}
-      <nav className="text-xs text-gray-400 mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
-        <Link href="/" className="hover:text-black transition-colors">Home</Link>
+      <nav className="text-xs text-[var(--color-text-muted)] mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
+        <Link href="/" className="hover:text-[var(--color-text-primary)] transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/products" className="hover:text-black transition-colors">Products</Link>
+        <Link href="/products" className="hover:text-[var(--color-text-primary)] transition-colors">Products</Link>
         {category.parent && (
           <>
             <span>/</span>
-            <Link href={`/categories/${category.parent.slug}`} className="hover:text-black transition-colors">
+            <Link href={`/categories/${category.parent.slug}`} className="hover:text-[var(--color-text-primary)] transition-colors">
               {category.parent.name}
             </Link>
           </>
         )}
         <span>/</span>
-        <span className="text-gray-600">{category.name}</span>
+        <span className="text-[var(--color-text-secondary)]">{category.name}</span>
       </nav>
 
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">{category.name}</h1>
-        <p className="text-gray-500 text-sm mt-1">{total} product{total !== 1 ? "s" : ""}</p>
+        <p className="text-[var(--color-text-secondary)] text-sm mt-1">{total} product{total !== 1 ? "s" : ""}</p>
       </div>
 
       {/* Subcategories */}
@@ -89,7 +89,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             <Link
               key={child.id}
               href={`/categories/${child.slug}`}
-              className="text-sm border border-gray-300 px-4 py-2 hover:border-black transition-colors"
+              className="text-sm border border-[var(--color-border)] px-4 py-2 hover:border-[var(--color-product-card-border)] transition-colors"
             >
               {child.name}
             </Link>
@@ -100,7 +100,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       {/* Sort */}
       <div className="flex items-center justify-start sm:justify-end mb-6 overflow-x-auto pb-1">
         <div className="flex shrink-0 items-center gap-2 text-sm">
-          <span className="text-gray-400">Sort:</span>
+          <span className="text-[var(--color-text-muted)]">Sort:</span>
           {[
             { value: "newest", label: "Newest" },
             { value: "price-asc", label: "Price ↑" },
@@ -111,8 +111,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               href={`/categories/${slug}?sort=${option.value}`}
               className={`px-3 py-1 border transition-colors ${
                 (sp.sort || "newest") === option.value
-                  ? "border-black bg-black text-white"
-                  : "border-gray-300 hover:border-black"
+                  ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-accent-contrast)]"
+                  : "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
               }`}
             >
               {option.label}
@@ -123,7 +123,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
       {/* Products */}
       {products.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--color-text-muted)]">
           <p className="text-sm">No products in this category yet</p>
         </div>
       ) : (
@@ -151,7 +151,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               key={p}
               href={`/categories/${slug}?${new URLSearchParams({ ...(sp.sort ? { sort: sp.sort } : {}), page: p.toString() }).toString()}`}
               className={`w-10 h-10 flex items-center justify-center text-sm border transition-colors ${
-                p === page ? "bg-black text-white border-black" : "border-gray-300 hover:border-black"
+                p === page ? "bg-[var(--color-accent)] text-[var(--color-accent-contrast)] border-[var(--color-accent)]" : "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
               }`}
             >
               {p}

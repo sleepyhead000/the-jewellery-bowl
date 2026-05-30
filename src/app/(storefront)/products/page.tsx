@@ -45,10 +45,10 @@ export default async function ProductsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12" style={{ color: "#E8D9B0" }}>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12 text-[var(--color-text-primary)]">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">All Products</h1>
-        <p className="text-sm mt-1" style={{ color: "rgba(232,217,176,0.75)" }}>
+        <p className="text-sm mt-1 text-[var(--color-text-secondary)]">
           {total} product{total !== 1 ? "s" : ""}
         </p>
       </div>
@@ -63,7 +63,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                 <Link
                   href="/products"
                   className={`text-sm transition-colors ${!params.category ? "font-bold" : ""}`}
-                  style={{ color: !params.category ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
+                  style={{ color: !params.category ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
                 >
                   All
                 </Link>
@@ -73,10 +73,10 @@ export default async function ProductsPage({ searchParams }: Props) {
                   <Link
                     href={`/products?category=${cat.slug}`}
                     className={`text-sm transition-colors ${params.category === cat.slug ? "font-bold" : ""}`}
-                    style={{ color: params.category === cat.slug ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
+                    style={{ color: params.category === cat.slug ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
                   >
                     {cat.name}
-                    <span className="ml-1" style={{ color: "rgba(232,217,176,0.55)" }}>
+                    <span className="ml-1 text-[var(--color-text-muted)]">
                       ({cat._count.products})
                     </span>
                   </Link>
@@ -97,7 +97,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                   <Link
                     href={`/products?${new URLSearchParams({ ...params, sort: option.value, page: "1" }).toString()}`}
                     className={`text-sm transition-colors ${(params.sort || "newest") === option.value ? "font-bold" : ""}`}
-                    style={{ color: (params.sort || "newest") === option.value ? "#E8D9B0" : "rgba(232,217,176,0.7)" }}
+                    style={{ color: (params.sort || "newest") === option.value ? "var(--color-text-primary)" : "var(--color-text-secondary)" }}
                   >
                     {option.label}
                   </Link>
@@ -110,8 +110,8 @@ export default async function ProductsPage({ searchParams }: Props) {
         {/* Product Grid */}
         <div className="flex-1">
           {products.length === 0 ? (
-            <div className="text-center py-20 text-gray-400">
-              <p className="text-sm" style={{ color: "rgba(232,217,176,0.7)" }}>No products found</p>
+            <div className="text-center py-20 text-[var(--color-text-muted)]">
+              <p className="text-sm">No products found</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
@@ -139,8 +139,8 @@ export default async function ProductsPage({ searchParams }: Props) {
                   href={`/products?${new URLSearchParams({ ...params, page: p.toString() }).toString()}`}
                   className={`w-10 h-10 flex items-center justify-center text-sm border transition-colors ${
                     p === page
-                      ? "bg-black text-white border-black"
-                      : "border-gray-300 hover:border-black"
+                      ? "bg-[var(--color-accent)] text-[var(--color-accent-contrast)] border-[var(--color-accent)]"
+                      : "border-[var(--color-border)] hover:border-[var(--color-product-card-border)]"
                   }`}
                 >
                   {p}

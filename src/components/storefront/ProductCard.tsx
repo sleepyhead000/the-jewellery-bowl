@@ -41,7 +41,10 @@ export default function ProductCard({ id, slug, name, image, price, salePrice, v
 
     return (
         <Link href={`/products/${slug || id}`} className="group block min-w-0">
-            <div className="relative aspect-square overflow-hidden bg-gray-100 mb-3 md:mb-4">
+            <div
+                className="relative aspect-[4/5] overflow-hidden border-[4px] bg-[var(--color-elevated)] mb-3 md:mb-4"
+                style={{ borderColor: "var(--color-product-card-border)" }}
+            >
                 {/* Dynamic Badges */}
                 <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
                     {hasSale && (
@@ -84,7 +87,7 @@ export default function ProductCard({ id, slug, name, image, price, salePrice, v
                         <button
                             onClick={handleQuickAdd}
                             disabled={adding}
-                            className="md:hidden absolute bottom-2.5 right-2.5 z-10 w-11 h-11 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-50 hover:bg-[#C9A84C] hover:text-white"
+                            className="md:hidden absolute bottom-2.5 right-2.5 z-10 w-11 h-11 bg-[var(--color-elevated)]/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform disabled:opacity-50 hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-contrast)]"
                         >
                             <ShoppingBag className="h-5 w-5" />
                         </button>
@@ -93,17 +96,17 @@ export default function ProductCard({ id, slug, name, image, price, salePrice, v
             </div>
 
             <div className="space-y-1.5 text-center">
-                <h3 className="text-[13px] sm:text-sm font-medium tracking-wide line-clamp-2 md:truncate leading-snug">{toTitleCase(name)}</h3>
+                <h3 className="text-[13px] sm:text-sm font-medium tracking-wide line-clamp-2 md:truncate leading-snug text-[var(--color-product-title)]">{toTitleCase(name)}</h3>
                 <div className="text-[11px] sm:text-xs font-medium space-x-1.5 sm:space-x-2">
                     {hasSale ? (
                         <>
-                            <span style={{ color: "#9E0B0B" }}>BDT {salePrice.toLocaleString()}</span>
-                            <span className="line-through" style={{ color: "#7a6e58" }}>
+                            <span className="text-[var(--color-product-sale-price)]">BDT {salePrice.toLocaleString()}</span>
+                            <span className="line-through text-[var(--color-product-compare-price)]">
                                 BDT {price.toLocaleString()}
                             </span>
                         </>
                     ) : (
-                        <span style={{ color: "#E8D9B0" }}>BDT {price.toLocaleString()}</span>
+                        <span className="text-[var(--color-product-price)]">BDT {price.toLocaleString()}</span>
                     )}
                 </div>
             </div>

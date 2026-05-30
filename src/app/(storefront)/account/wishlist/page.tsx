@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
@@ -25,7 +26,7 @@ export default function WishlistPage() {
     setItems((prev) => prev.filter((i) => (i.productId as string) !== productId));
   };
 
-  if (loading) return <div className="text-gray-400 text-sm">Loading wishlist...</div>;
+  if (loading) return <div className="text-[var(--color-text-muted)] text-sm">Loading wishlist...</div>;
 
   return (
     <div>
@@ -33,8 +34,8 @@ export default function WishlistPage() {
 
       {items.length === 0 ? (
         <div className="text-center py-16">
-          <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">Your wishlist is empty</p>
+          <Heart className="h-12 w-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+          <p className="text-[var(--color-text-secondary)] mb-4">Your wishlist is empty</p>
           <Link href="/products" className="text-sm font-medium underline">Browse Products</Link>
         </div>
       ) : (
@@ -46,13 +47,22 @@ export default function WishlistPage() {
             const price = variants?.[0]?.basePrice as number | undefined;
 
             return (
-              <div key={item.id as string} className="border border-gray-200 rounded-lg overflow-hidden group">
+              <div key={item.id as string} className="border border-[var(--color-border)] overflow-hidden group bg-[var(--color-elevated)]">
                 <Link href={`/products/${product.slug}`}>
-                  <div className="aspect-[4/3] sm:aspect-square bg-gray-100 relative overflow-hidden">
+                  <div
+                    className="aspect-[4/5] bg-[var(--color-elevated)] relative overflow-hidden border-[4px]"
+                    style={{ borderColor: "var(--color-product-card-border)" }}
+                  >
                     {images?.[0] ? (
-                      <img src={images[0].url as string} alt={product.name as string} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <Image
+                        src={images[0].url as string}
+                        alt={product.name as string}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)]">
                         <ShoppingBag className="h-10 w-10" />
                       </div>
                     )}
@@ -60,9 +70,9 @@ export default function WishlistPage() {
                 </Link>
                 <div className="p-4">
                   <Link href={`/products/${product.slug}`}>
-                    <h3 className="text-sm font-medium hover:underline line-clamp-2">{product.name as string}</h3>
+                    <h3 className="text-sm font-medium hover:underline line-clamp-2 text-[var(--color-product-title)]">{product.name as string}</h3>
                   </Link>
-                  {price && <p className="text-sm text-gray-500 mt-1">{formatPrice(price)}</p>}
+                  {price && <p className="text-sm text-[var(--color-product-price)] mt-1">{formatPrice(price)}</p>}
                   <Button
                     variant="outline"
                     size="sm"
@@ -80,4 +90,3 @@ export default function WishlistPage() {
     </div>
   );
 }
-
