@@ -6,13 +6,7 @@ import "./globals.css";
 
 const THEME_BOOT_SCRIPT = `
   (function() {
-    try {
-      var mode = localStorage.getItem("theme_mode");
-      var safeMode = mode === "dark" ? "dark" : "light";
-      document.documentElement.setAttribute("data-theme", safeMode);
-    } catch (error) {
-      document.documentElement.setAttribute("data-theme", "light");
-    }
+    document.documentElement.setAttribute("data-theme", "light");
   })();
 `;
 
