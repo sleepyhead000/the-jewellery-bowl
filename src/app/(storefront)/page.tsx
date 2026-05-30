@@ -1,4 +1,3 @@
-import HomeIntroShell from "@/components/storefront/HomeIntroShell";
 import HomepageDesign from "@/components/storefront/HomepageDesign";
 import { db } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
@@ -178,14 +177,12 @@ export default async function Home() {
         };
 
         return (
-            <HomeIntroShell>
-                <HomepageDesign
-                    heroConfig={heroConfig}
-                    layoutConfig={cleanedLayoutConfig}
-                    translations={translations}
-                    productsBySection={productsBySection}
-                />
-            </HomeIntroShell>
+            <HomepageDesign
+                heroConfig={heroConfig}
+                layoutConfig={cleanedLayoutConfig}
+                translations={translations}
+                productsBySection={productsBySection}
+            />
         );
     } catch (error) {
         if (!isMissingTableError(error)) {
@@ -200,13 +197,13 @@ export default async function Home() {
             sections: fallbackLayout.sections.map((section) => ({ ...section, enabled: false })),
         };
 
-        <HomeIntroShell>
+        return (
             <HomepageDesign
                 heroConfig={fallbackHero}
                 layoutConfig={disabledLayout}
                 translations={fallbackTranslations}
                 productsBySection={{}}
             />
-        </HomeIntroShell>
+        );
     }
 }
