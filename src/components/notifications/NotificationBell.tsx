@@ -41,6 +41,7 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [authorized, setAuthorized] = useState<boolean>(true);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const previousUnreadRef = useRef<number>(0);
 
   const fetchNotifications = async (): Promise<void> => {
@@ -73,6 +74,28 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
     fetchNotifications();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsidePointer = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (rootRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
   const markAllRead = async (): Promise<void> => {
     await fetch("/api/notifications", {
       method: "PATCH",
@@ -87,7 +110,7 @@ export default function NotificationBell({ href, compact }: NotificationBellProp
   if (!authorized) return null;
 
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <button
         className="relative transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         type="button"
