@@ -59,9 +59,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
       {/* Breadcrumb */}
-      <nav className="text-xs text-gray-400 mb-8 space-x-2">
+      <nav className="text-xs text-gray-400 mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
         <Link href="/" className="hover:text-black transition-colors">Home</Link>
         <span>/</span>
         <Link href="/products" className="hover:text-black transition-colors">Products</Link>
@@ -78,7 +78,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </nav>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold uppercase tracking-tight">{category.name}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">{category.name}</h1>
         <p className="text-gray-500 text-sm mt-1">{total} product{total !== 1 ? "s" : ""}</p>
       </div>
 
@@ -98,8 +98,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       )}
 
       {/* Sort */}
-      <div className="flex items-center justify-end mb-6">
-        <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center justify-start sm:justify-end mb-6 overflow-x-auto pb-1">
+        <div className="flex shrink-0 items-center gap-2 text-sm">
           <span className="text-gray-400">Sort:</span>
           {[
             { value: "newest", label: "Newest" },
@@ -127,7 +127,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <p className="text-sm">No products in this category yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
           {products.map((product) => (
             <ProductCard
               key={product.id}

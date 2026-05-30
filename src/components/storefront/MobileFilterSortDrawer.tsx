@@ -61,7 +61,7 @@ export default function MobileFilterSortDrawer({ categories }: MobileFilterSortD
 
     return (
         <>
-            <div className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40">
+            <div className="lg:hidden fixed bottom-[5.25rem] left-1/2 -translate-x-1/2 z-40">
                 <button
                     onClick={openDrawer}
                     className="bg-[#C9A84C] px-6 py-3 rounded-full shadow-lg font-bold text-xs uppercase tracking-widest flex items-center gap-2 active:scale-95 transition-transform"
@@ -81,7 +81,7 @@ export default function MobileFilterSortDrawer({ categories }: MobileFilterSortD
                         aria-label="Close filter drawer"
                     />
                     <div
-                        className="absolute bottom-0 left-0 right-0 rounded-t-2xl p-4 h-[75vh] overflow-y-auto overscroll-contain pointer-events-auto"
+                        className="absolute bottom-0 left-0 right-0 rounded-t-2xl p-4 h-[75svh] overflow-y-auto overscroll-contain pointer-events-auto pb-24"
                         style={{ WebkitOverflowScrolling: "touch", background: "#0d0d0d", color: "#E8D9B0" }}
                     >
                         <div className="flex items-center justify-between mb-4">
@@ -149,7 +149,7 @@ export default function MobileFilterSortDrawer({ categories }: MobileFilterSortD
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 mt-6 pb-2">
+                        <div className="sticky bottom-0 grid grid-cols-2 gap-3 mt-6 bg-[#0d0d0d] pt-3 pb-2">
                             <button
                                 onClick={clearAll}
                                 className="px-4 py-3 border border-gray-300 text-sm font-medium"

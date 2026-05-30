@@ -55,16 +55,16 @@ export default function ProductDetailInteractive(props: ProductDetailInteractive
     <>
       <ProductImages images={selectedImages} name={productName} />
 
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold uppercase tracking-tight">{productName}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight leading-tight">{productName}</h1>
           {categoryName && (
             <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">{categoryName}</p>
           )}
         </div>
 
-        <div className="flex items-baseline gap-3">
-          <span className="text-2xl font-bold">{formatPrice(displayPrice)}</span>
+        <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
+          <span className="text-xl sm:text-2xl font-bold">{formatPrice(displayPrice)}</span>
           {selectedVariant?.salePrice ? (
             <span className="text-sm text-gray-400 line-through">{formatPrice(selectedVariant.price)}</span>
           ) : null}

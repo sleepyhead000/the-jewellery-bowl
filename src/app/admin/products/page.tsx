@@ -67,7 +67,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-tight">Products</h1>
           <p className="text-gray-500 text-sm mt-1">
@@ -75,28 +75,28 @@ export default function AdminProductsPage() {
           </p>
         </div>
         <Link href="/admin/products/new">
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" /> Add Product
           </Button>
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <form onSubmit={handleSearch} className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row">
           <input
             type="text"
             placeholder="Search products..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black w-64"
+            className="min-h-11 w-full border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black sm:w-64"
           />
-          <Button type="submit" variant="outline" size="sm">Search</Button>
+          <Button type="submit" variant="outline" size="sm" className="w-full sm:w-auto">Search</Button>
         </form>
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          className="border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black"
+          className="min-h-11 w-full border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black sm:w-auto"
         >
           <option value="">All Status</option>
           <option value="ACTIVE">Active</option>
@@ -105,8 +105,49 @@ export default function AdminProductsPage() {
         </select>
       </div>
 
+      <div className="grid gap-3 lg:hidden">
+        {loading ? (
+          <div className="border border-gray-200 bg-white p-6 text-center text-sm text-gray-400">Loading...</div>
+        ) : data?.products.length === 0 ? (
+          <div className="border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+            <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />No products found
+          </div>
+        ) : (
+          data?.products.map((product) => (
+            <article key={product.id} className="border border-gray-200 bg-white p-4">
+              <div className="flex gap-3">
+                {product.images[0] ? (
+                  <img src={product.images[0].url} alt={product.name} className="h-16 w-16 shrink-0 object-cover" />
+                ) : (
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center bg-gray-100">
+                    <Package className="h-5 w-5 text-gray-400" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-sm font-medium">{product.name}</p>
+                  <p className="mt-1 text-xs text-gray-400">{product.category?.name || "No category"}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant={product.status === "ACTIVE" ? "success" : product.status === "DRAFT" ? "default" : "warning"}>{product.status}</Badge>
+                    {product.isFeatured ? <span className="text-[10px] font-bold uppercase text-amber-600">Featured</span> : null}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Price</span>{formatPrice(product.basePrice)}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Stock</span>{totalStock(product.variants)}</div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <Link href={`/products/${product.slug}`} target="_blank"><Button variant="outline" size="sm" className="w-full"><Eye className="h-4 w-4" /></Button></Link>
+                <Link href={`/admin/products/${product.id}/edit`}><Button variant="outline" size="sm" className="w-full"><Pencil className="h-4 w-4" /></Button></Link>
+                <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)} className="w-full text-red-500"><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="hidden bg-white border border-gray-200 rounded-lg overflow-hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

@@ -67,8 +67,8 @@ export default async function ProductDetailPage({ params }: Props) {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <nav className="text-xs text-gray-400 mb-8 space-x-2">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
+      <nav className="text-xs text-gray-400 mb-6 sm:mb-8 flex flex-wrap gap-x-2 gap-y-1">
         <Link href="/" className="hover:text-black transition-colors">Home</Link>
         <span>/</span>
         <Link href="/products" className="hover:text-black transition-colors">Products</Link>
@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <span className="text-gray-600">{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <ProductDetailInteractive
           productId={product.id}
           productName={product.name}
@@ -105,7 +105,7 @@ export default async function ProductDetailPage({ params }: Props) {
       </div>
 
       {product.reviews.length > 0 && (
-        <section className="mt-20">
+        <section className="mt-14 sm:mt-20">
           <h2 className="text-lg font-bold uppercase tracking-tight mb-8">
             Reviews ({product.reviews.length})
           </h2>
@@ -133,9 +133,9 @@ export default async function ProductDetailPage({ params }: Props) {
       )}
 
       {relatedProducts.length > 0 && (
-        <section className="mt-20">
+        <section className="mt-14 sm:mt-20">
           <h2 className="text-lg font-bold uppercase tracking-tight mb-8">You May Also Like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
             {relatedProducts.map((p) => (
               <ProductCard
                 key={p.id}

@@ -12,8 +12,8 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold uppercase tracking-tight mb-8">Shopping Cart</h1>
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight mb-6 sm:mb-8">Shopping Cart</h1>
         <p className="text-gray-400 text-sm">Loading...</p>
       </div>
     );
@@ -21,7 +21,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-20 pb-28 text-center">
         <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-gray-300" />
         <h1 className="text-2xl font-bold uppercase tracking-tight mb-2">Your Cart is Empty</h1>
         <p className="text-gray-500 text-sm mb-6">Explore our collection and find something you love.</p>
@@ -33,12 +33,12 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold uppercase tracking-tight mb-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
+      <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight mb-6 sm:mb-8">
         Shopping Cart ({items.length})
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Items */}
         <div className="flex-1 space-y-4">
           {items.map((item) => {
@@ -46,10 +46,10 @@ export default function CartPage() {
             return (
               <div
                 key={item.id}
-                className="flex gap-4 p-4 border border-gray-200 rounded-lg"
+                className="flex gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg"
               >
                 {/* Image */}
-                <div className="relative w-20 h-20 shrink-0 bg-gray-100 rounded overflow-hidden">
+                <div className="relative h-[72px] w-[72px] sm:w-20 sm:h-20 shrink-0 bg-gray-100 rounded overflow-hidden">
                   {item.product.image ? (
                     <Image
                       src={item.product.image}
@@ -69,7 +69,7 @@ export default function CartPage() {
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/products/${item.product.slug}`}
-                    className="text-sm font-medium hover:underline block truncate"
+                    className="text-sm font-medium hover:underline block line-clamp-2"
                   >
                     {item.product.name}
                   </Link>
@@ -80,12 +80,12 @@ export default function CartPage() {
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">SKU: {item.variant.sku}</p>
 
-                  <div className="flex items-center justify-between mt-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-3">
                     {/* Quantity */}
-                    <div className="flex items-center border border-gray-300">
+                    <div className="flex h-10 w-full items-center justify-between border border-gray-300 sm:w-auto">
                       <button
                         onClick={() => updateQuantity(item.variantId, Math.max(1, item.quantity - 1))}
-                        className="px-2.5 py-1 text-sm hover:bg-gray-50"
+                        className="h-full min-w-10 px-2.5 text-sm hover:bg-gray-50"
                       >
                         −
                       </button>
@@ -94,14 +94,14 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.variantId, Math.min(item.variant.stock, item.quantity + 1))}
-                        className="px-2.5 py-1 text-sm hover:bg-gray-50"
+                        className="h-full min-w-10 px-2.5 text-sm hover:bg-gray-50"
                       >
                         +
                       </button>
                     </div>
 
                     {/* Price */}
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <span className="text-sm font-medium">
                         {formatPrice(item.variant.price * item.quantity)}
                       </span>
@@ -128,7 +128,7 @@ export default function CartPage() {
 
         {/* Summary */}
         <div className="lg:w-80 shrink-0">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4 sticky top-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4 lg:sticky lg:top-4">
             <h2 className="text-sm font-bold uppercase tracking-wide">Order Summary</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">

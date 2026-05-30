@@ -146,12 +146,12 @@ export default function ProductActions({
           <label className="block text-xs font-bold uppercase tracking-wide mb-2">
             Select Variant
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {variants.map((v) => (
               <button
                 key={v.id}
                 onClick={() => { setSelectedVariant(v.id); setQuantity(1); }}
-                className={`px-4 py-2 text-sm border transition-colors ${
+                className={`min-h-11 px-3 sm:px-4 py-2 text-sm border transition-colors ${
                   v.id === selectedVariant
                     ? "border-black bg-black text-white"
                     : v.stock > 0
@@ -183,37 +183,37 @@ export default function ProductActions({
 
       {/* Quantity + Cart */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex items-center border border-gray-300">
+        <div className="flex h-11 w-full items-center justify-between border border-gray-300 sm:w-auto">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+            className="h-full min-w-12 px-3 text-sm hover:bg-gray-50 transition-colors"
           >
             −
           </button>
           <span className="px-4 py-2 text-sm font-medium min-w-[3rem] text-center">{quantity}</span>
           <button
             onClick={() => setQuantity((q) => Math.min(variant?.stock || 1, q + 1))}
-            className="px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+            className="h-full min-w-12 px-3 text-sm hover:bg-gray-50 transition-colors"
           >
             +
           </button>
         </div>
 
         <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
-        <Button onClick={addToCart} disabled={!inStock || adding || buyingNow} className="w-full">
-          <ShoppingBag className="h-4 w-4 mr-2" />
-          {!inStock ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}
-        </Button>
+          <Button onClick={addToCart} disabled={!inStock || adding || buyingNow} className="w-full">
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            {!inStock ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}
+          </Button>
 
-        <Button onClick={buyNow} disabled={!inStock || adding || buyingNow} variant="outline" className="w-full">
-          <CreditCard className="h-4 w-4 mr-2" />
-          {!inStock ? "Out of Stock" : buyingNow ? "Opening..." : "Buy Now"}
-        </Button>
+          <Button onClick={buyNow} disabled={!inStock || adding || buyingNow} variant="outline" className="w-full">
+            <CreditCard className="h-4 w-4 mr-2" />
+            {!inStock ? "Out of Stock" : buyingNow ? "Opening..." : "Buy Now"}
+          </Button>
         </div>
 
         <button
           onClick={addToWishlist}
-          className={`p-3 border transition-colors ${
+          className={`flex h-11 w-full items-center justify-center border transition-colors sm:w-11 ${
             wishlisted ? "border-black bg-black text-white" : "border-gray-300 hover:border-black"
           }`}
           disabled={wishlistBusy}

@@ -12,12 +12,12 @@ export function Tabs({ tabs, defaultTab }: TabsProps) {
 
   return (
     <div>
-      <div className="flex border-b border-[var(--color-border)]">
+      <div className="flex overflow-x-auto border-b border-[var(--color-border)]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
-            className={`px-4 py-3 text-xs font-bold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
+            className={`shrink-0 px-4 py-3 text-xs font-bold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
               active === tab.id
                 ? "border-[var(--color-accent)] text-[var(--color-text-primary)]"
                 : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"

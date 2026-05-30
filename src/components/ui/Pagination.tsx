@@ -24,11 +24,11 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-wrap items-center justify-center gap-1">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="min-h-10 min-w-10 p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -42,7 +42,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`min-w-[32px] h-8 text-xs font-bold transition-colors ${
+            className={`min-w-10 h-10 text-xs font-bold transition-colors ${
               page === currentPage
                 ? "bg-[var(--color-accent)] text-[var(--color-accent-contrast)]"
                 : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]"
@@ -56,7 +56,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="min-h-10 min-w-10 p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronRight className="h-4 w-4" />
       </button>

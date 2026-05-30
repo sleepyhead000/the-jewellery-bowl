@@ -48,9 +48,9 @@ export default async function SearchPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold uppercase tracking-tight">Search</h1>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">Search</h1>
         {query ? (
           <p className="text-gray-500 text-sm mt-1">
             {total} result{total !== 1 ? "s" : ""} for &ldquo;{rawQuery}&rdquo;
@@ -68,12 +68,12 @@ export default async function SearchPage({ searchParams }: Props) {
             name="q"
             defaultValue={rawQuery}
             placeholder="Search products..."
-            className="flex-1 border border-gray-300 border-r-0 px-4 py-3 text-sm outline-none focus:border-black"
+            className="min-w-0 flex-1 border border-gray-300 border-r-0 px-4 py-3 text-sm outline-none focus:border-black"
             autoFocus
           />
           <button
             type="submit"
-            className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+            className="shrink-0 bg-black text-white px-4 sm:px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
           >
             Search
           </button>
@@ -86,7 +86,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <p className="text-xs mt-2">Try a different search term</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
           {products.map((product) => (
             <ProductCard
               key={product.id}

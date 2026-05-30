@@ -148,7 +148,7 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+      <div className="max-w-3xl mx-auto px-4 py-20 pb-28 text-center">
         <p className="text-gray-500">Your cart is empty</p>
         <Button onClick={() => router.push("/products")} className="mt-4">Shop Now</Button>
       </div>
@@ -156,11 +156,11 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold uppercase tracking-tight mb-8">Checkout</h1>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
+      <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-tight mb-6 sm:mb-8">Checkout</h1>
 
       {/* Steps indicator */}
-      <div className="flex items-center gap-2 mb-10 text-sm">
+      <div className="mb-8 flex items-center gap-2 overflow-x-auto pb-1 text-sm sm:mb-10">
         {["Address", "Payment", "Review"].map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <button
@@ -173,13 +173,13 @@ export default function CheckoutPage() {
             >
               {step > i + 1 ? "✓" : i + 1}
             </button>
-            <span className={step >= i + 1 ? "text-black font-medium" : "text-gray-400"}>{label}</span>
-            {i < 2 && <div className="w-8 h-px bg-gray-300" />}
+            <span className={`whitespace-nowrap ${step >= i + 1 ? "text-black font-medium" : "text-gray-400"}`}>{label}</span>
+            {i < 2 && <div className="h-px w-5 shrink-0 bg-gray-300 sm:w-8" />}
           </div>
         ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Main content */}
         <div className="flex-1">
           {/* Step 1: Address */}
@@ -194,7 +194,7 @@ export default function CheckoutPage() {
                   {addresses.map((addr) => (
                     <label
                       key={addr.id}
-                      className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
                         selectedAddress === addr.id ? "border-black bg-gray-50" : "border-gray-200 hover:border-gray-400"
                       }`}
                     >
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
               {showAddressForm ? (
                 <form onSubmit={addAddress} className="border border-gray-200 rounded-lg p-4 space-y-3">
                   <Input label="Label (optional)" value={newAddr.label} onChange={(e) => setNewAddr((a) => ({ ...a, label: e.target.value }))} placeholder="Home, Office..." />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wide mb-2">Division</label>
                       <select value={newAddr.division} onChange={(e) => setNewAddr((a) => ({ ...a, division: e.target.value }))} className="w-full border border-gray-300 px-4 py-3 text-sm outline-none focus:border-black" required>
@@ -230,11 +230,11 @@ export default function CheckoutPage() {
                   </div>
                   <Input label="Area" value={newAddr.area} onChange={(e) => setNewAddr((a) => ({ ...a, area: e.target.value }))} />
                   <Input label="Street Address" value={newAddr.street} onChange={(e) => setNewAddr((a) => ({ ...a, street: e.target.value }))} required />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Input label="Postal Code" value={newAddr.postalCode} onChange={(e) => setNewAddr((a) => ({ ...a, postalCode: e.target.value }))} />
                     <Input label="Phone" value={newAddr.phone} onChange={(e) => setNewAddr((a) => ({ ...a, phone: e.target.value }))} required />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Button type="submit" size="sm">Save Address</Button>
                     <Button type="button" variant="outline" size="sm" onClick={() => setShowAddressForm(false)}>Cancel</Button>
                   </div>
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
               )}
 
               <div className="pt-4">
-                <Button onClick={() => { if (selectedAddress) setStep(2); else setError("Please select an address"); }} disabled={!selectedAddress}>
+                <Button onClick={() => { if (selectedAddress) setStep(2); else setError("Please select an address"); }} disabled={!selectedAddress} className="w-full sm:w-auto">
                   Continue to Payment
                 </Button>
               </div>
@@ -260,12 +260,12 @@ export default function CheckoutPage() {
                 <CreditCard className="h-4 w-4" /> Payment Method
               </h2>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {(["BKASH", "NAGAD", "COD"] as const).map((method) => (
                   <button
                     key={method}
                     onClick={() => setPaymentMethod(method)}
-                    className={`px-6 py-3 border text-sm font-medium transition-colors ${
+                    className={`min-h-11 px-4 sm:px-6 py-3 border text-sm font-medium transition-colors ${
                       paymentMethod === method ? "border-black bg-black text-white" : "border-gray-300 hover:border-black"
                     }`}
                   >
@@ -275,7 +275,7 @@ export default function CheckoutPage() {
               </div>
 
               {(paymentMethod === "BKASH" || paymentMethod === "NAGAD") && (
-                <div className="border border-gray-200 rounded-lg p-6 space-y-4">
+                <div className="border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
                   {activeAccount ? (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                       <p className="text-sm font-medium">
@@ -320,9 +320,9 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4">
-                <Button onClick={() => setStep(3)}>Review Order</Button>
-                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row">
+                <Button onClick={() => setStep(3)} className="w-full sm:w-auto">Review Order</Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="w-full sm:w-auto">Back</Button>
               </div>
             </div>
           )}
@@ -380,11 +380,11 @@ export default function CheckoutPage() {
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
-              <div className="flex gap-3 pt-2">
-                <Button onClick={placeOrder} disabled={placing}>
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <Button onClick={placeOrder} disabled={placing} className="w-full sm:w-auto">
                   {placing ? "Placing Order..." : "Place Order"}
                 </Button>
-                <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(2)} className="w-full sm:w-auto">Back</Button>
               </div>
             </div>
           )}
@@ -392,7 +392,7 @@ export default function CheckoutPage() {
 
         {/* Order summary sidebar */}
         <div className="lg:w-72 shrink-0">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-3 sticky top-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-3 lg:sticky lg:top-4">
             <h3 className="text-sm font-bold uppercase tracking-wide">Summary</h3>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between">

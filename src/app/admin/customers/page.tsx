@@ -39,7 +39,7 @@ export default function AdminCustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold uppercase tracking-tight">Customers</h1>
         <Badge variant="default">{pagination.total} total</Badge>
       </div>
@@ -52,12 +52,38 @@ export default function AdminCustomersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, phone, or email..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 text-sm outline-none focus:border-black"
+            className="min-h-11 w-full pl-10 pr-4 py-2.5 border border-gray-200 text-sm outline-none focus:border-black"
           />
         </div>
       </form>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="grid gap-3 lg:hidden">
+        {loading ? (
+          <div className="border border-gray-200 bg-white p-6 text-center text-sm text-gray-400">Loading...</div>
+        ) : customers.length === 0 ? (
+          <div className="border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+            <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />No customers found
+          </div>
+        ) : (
+          customers.map((c) => (
+            <article key={c.id} className="border border-gray-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{c.name || "Customer"}</p>
+                  <p className="mt-1 break-all text-xs text-gray-400">{c.email || "No email"}</p>
+                </div>
+                <Badge variant={c._count.orders > 0 ? "success" : "default"}>{c._count.orders} orders</Badge>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Phone</span>{c.phone || "-"}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Joined</span>{new Date(c.createdAt).toLocaleDateString()}</div>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      <div className="hidden bg-white border border-gray-200 rounded-lg overflow-hidden lg:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-400">

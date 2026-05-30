@@ -51,7 +51,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-tight">Orders</h1>
           <p className="text-gray-500 text-sm mt-1">{total} order{total !== 1 ? "s" : ""}</p>
@@ -63,7 +63,7 @@ export default function AdminOrdersPage() {
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-          className="border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black"
+          className="min-h-11 w-full border border-gray-300 px-4 py-2 text-sm outline-none focus:border-black sm:w-auto"
         >
           <option value="">All Status</option>
           {Object.keys(STATUS_COLORS).map((s) => (
@@ -72,8 +72,36 @@ export default function AdminOrdersPage() {
         </select>
       </div>
 
+      <div className="grid gap-3 lg:hidden">
+        {loading ? (
+          <div className="border border-gray-200 bg-white p-6 text-center text-sm text-gray-400">Loading...</div>
+        ) : orders.length === 0 ? (
+          <div className="border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+            <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />No orders found
+          </div>
+        ) : (
+          orders.map((order) => (
+            <Link key={order.id} href={`/admin/orders/${order.id}`} className="block border border-gray-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-sm font-bold">{order.orderNumber}</p>
+                  <p className="mt-1 truncate text-sm text-gray-500">{order.user.name || order.user.phone || "Customer"}</p>
+                </div>
+                <Badge variant={STATUS_COLORS[order.status] || "default"}>{order.status}</Badge>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Total</span>{formatPrice(order.total)}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Items</span>{order._count.items}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Payment</span>{order.payment ? <Badge variant={order.payment.status === "VERIFIED" ? "success" : order.payment.status === "REJECTED" ? "danger" : "warning"}>{order.payment.method}</Badge> : "None"}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Date</span>{new Date(order.createdAt).toLocaleDateString()}</div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="hidden bg-white border border-gray-200 rounded-lg overflow-hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

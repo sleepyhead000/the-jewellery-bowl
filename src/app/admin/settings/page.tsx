@@ -271,8 +271,8 @@ function ShippingZonesSection() {
         </Button>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+        <table className="min-w-[640px] w-full">
           <thead>
             <tr className="border-b border-gray-100 text-xs font-bold uppercase tracking-wide text-gray-500">
               <th className="text-left px-6 py-4">Zone</th>
@@ -383,8 +383,8 @@ function PaymentAccountsSection() {
         </Button>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+        <table className="min-w-[640px] w-full">
           <thead>
             <tr className="border-b border-gray-100 text-xs font-bold uppercase tracking-wide text-gray-500">
               <th className="text-left px-6 py-4">Method</th>

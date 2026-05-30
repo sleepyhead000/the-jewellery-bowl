@@ -57,12 +57,12 @@ export default function AdminReviewsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold uppercase tracking-tight">Reviews</h1>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {(["pending", "approved", "all"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 text-sm border transition-colors ${
+            className={`min-h-11 shrink-0 px-4 py-2 text-sm border transition-colors ${
               filter === f ? "bg-black text-white border-black" : "border-gray-200 hover:border-gray-400"
             }`}
           >
@@ -78,8 +78,8 @@ export default function AdminReviewsPage() {
       ) : (
         <div className="space-y-3">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-5">
-              <div className="flex items-start justify-between">
+            <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="flex gap-0.5">
@@ -96,7 +96,7 @@ export default function AdminReviewsPage() {
                     by {review.user.name || "Anonymous"} · {new Date(review.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:flex">
                   {!review.isApproved && (
                     <Button size="sm" onClick={() => handleApprove(review.id)} title="Approve">
                       <Check className="h-3.5 w-3.5" />

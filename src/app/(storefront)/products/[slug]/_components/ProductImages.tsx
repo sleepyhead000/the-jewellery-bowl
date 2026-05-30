@@ -25,7 +25,7 @@ export default function ProductImages({ images, name }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <Image
           src={images[selected]}
@@ -37,12 +37,12 @@ export default function ProductImages({ images, name }: Props) {
         />
       </div>
       {images.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto">
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1">
           {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setSelected(i)}
-              className={`relative w-20 h-20 shrink-0 overflow-hidden border-2 transition-colors ${
+              className={`relative h-16 w-16 sm:w-20 sm:h-20 shrink-0 overflow-hidden border-2 transition-colors ${
                 i === selected ? "border-black" : "border-transparent hover:border-gray-300"
               }`}
             >

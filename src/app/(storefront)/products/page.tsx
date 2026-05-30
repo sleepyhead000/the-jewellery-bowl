@@ -45,9 +45,9 @@ export default async function ProductsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12" style={{ color: "#E8D9B0" }}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold uppercase tracking-tight">All Products</h1>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12" style={{ color: "#E8D9B0" }}>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight">All Products</h1>
         <p className="text-sm mt-1" style={{ color: "rgba(232,217,176,0.75)" }}>
           {total} product{total !== 1 ? "s" : ""}
         </p>
@@ -114,7 +114,7 @@ export default async function ProductsPage({ searchParams }: Props) {
               <p className="text-sm" style={{ color: "rgba(232,217,176,0.7)" }}>No products found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
