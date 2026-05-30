@@ -7,6 +7,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN cp .env.production .env
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -19,4 +20,3 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
 CMD ["npm", "run", "start"]
-
