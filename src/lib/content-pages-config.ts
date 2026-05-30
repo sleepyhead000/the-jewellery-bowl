@@ -1,4 +1,4 @@
-export type ContentPageKey = "about" | "contact" | "howToBuy";
+export type ContentPageKey = "about" | "contact" | "howToBuy" | "faqs" | "returns" | "privacyPolicy" | "termsOfService";
 
 export type ContentPageConfig = {
   title: string;
@@ -38,6 +38,40 @@ export const defaultContentPages: ContentPagesConfig = {
       "Track updates from your account order history and notifications.",
     ],
   },
+  faqs: {
+    title: "FAQs",
+    body: "",
+    listItems: [
+      "How long does delivery take? Delivery timing depends on your address and selected shipping zone.",
+      "How do I confirm digital payment? Submit the transaction details during checkout so the team can verify the payment.",
+      "Can I change an order after placing it? Contact support as soon as possible before the order is processed.",
+      "Where can I track orders? Sign in to your account and open order history for the latest status.",
+    ],
+  },
+  returns: {
+    title: "Returns",
+    body: [
+      "Return eligibility depends on the product condition, delivery status, and whether the item was customized or used.",
+      "Contact support with your order number and product details before sending anything back. The team will confirm the next steps after reviewing the request.",
+    ].join("\n\n"),
+    listItems: [],
+  },
+  privacyPolicy: {
+    title: "Privacy Policy",
+    body: [
+      "We collect the information needed to process orders, deliver purchases, verify payments, and support customer accounts.",
+      "Customer information is used for storefront operations and support. We do not sell customer data. Payment verification details are handled only for order processing and fraud prevention.",
+    ].join("\n\n"),
+    listItems: [],
+  },
+  termsOfService: {
+    title: "Terms of Service",
+    body: [
+      "By using this website, you agree to provide accurate order, account, delivery, and payment information.",
+      "Prices, availability, promotions, and delivery timelines may change based on product stock and operational requirements. Confirmed orders remain subject to payment verification and fraud checks.",
+    ].join("\n\n"),
+    listItems: [],
+  },
 };
 
 const normalizeText = (value: unknown, fallback: string): string => {
@@ -70,5 +104,9 @@ export const normalizeContentPages = (input: unknown): ContentPagesConfig => {
     about: normalizePage(record.about, defaultContentPages.about),
     contact: normalizePage(record.contact, defaultContentPages.contact),
     howToBuy: normalizePage(record.howToBuy, defaultContentPages.howToBuy),
+    faqs: normalizePage(record.faqs, defaultContentPages.faqs),
+    returns: normalizePage(record.returns, defaultContentPages.returns),
+    privacyPolicy: normalizePage(record.privacyPolicy, defaultContentPages.privacyPolicy),
+    termsOfService: normalizePage(record.termsOfService, defaultContentPages.termsOfService),
   };
 };

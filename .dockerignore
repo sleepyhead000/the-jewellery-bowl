@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+uploads
+deployment/*.tar
+*.db
+.env
+.env.local
+tsconfig.tsbuildinfo

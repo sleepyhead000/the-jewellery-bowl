@@ -76,7 +76,7 @@ export default function Footer() {
 
     const socialIconMap = { facebook: Facebook, instagram: Instagram, twitter: Twitter };
     const socialLinks = settings.socialLinks
-        .filter((entry) => entry.enabled)
+        .filter((entry) => entry.enabled && entry.href.trim().length > 0)
         .map((entry) => ({ Icon: socialIconMap[entry.platform], href: entry.href, platform: entry.platform }));
 
     return (

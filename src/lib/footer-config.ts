@@ -42,18 +42,18 @@ export const defaultFooterSettings: FooterSettingsConfig = {
   ],
   supportLinks: [
     { label: "Contact Us", href: "/contact" },
-    { label: "FAQs", href: "#" },
+    { label: "FAQs", href: "/faqs" },
     { label: "Shipping Info", href: "/how-to-buy" },
-    { label: "Returns", href: "#" },
+    { label: "Returns", href: "/returns" },
   ],
   legalLinks: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms of Service", href: "/terms-of-service" },
   ],
   socialLinks: [
-    { platform: "facebook", href: "#", enabled: true },
-    { platform: "instagram", href: "#", enabled: true },
-    { platform: "twitter", href: "#", enabled: true },
+    { platform: "facebook", href: "", enabled: false },
+    { platform: "instagram", href: "", enabled: false },
+    { platform: "twitter", href: "", enabled: false },
   ],
 };
 

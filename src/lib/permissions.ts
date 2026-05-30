@@ -50,10 +50,6 @@ export function hasPermission(role: Role, permission: Permission): boolean {
   return (allowed as readonly string[]).includes(role);
 }
 
-export function requireRole(...roles: Role[]) {
-  return (userRole: Role): boolean => roles.includes(userRole);
-}
-
 export function getRolePermissions(role: Role): Permission[] {
   return (Object.keys(PERMISSIONS) as Permission[]).filter((permission) =>
     hasPermission(role, permission)

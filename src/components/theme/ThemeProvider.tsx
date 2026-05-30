@@ -49,11 +49,3 @@ export function useTheme(): ThemeContextValue {
   }
   return value;
 }
-
-export function themeBootScript(): string {
-  return `
-    (function() {
-      document.documentElement.setAttribute("data-theme", "light");
-    })();
-  `;
-}

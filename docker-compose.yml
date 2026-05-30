@@ -1,9 +1,10 @@
-version: "3.9"
 services:
   app:
     build: .
     container_name: tnluxury_app
     restart: unless-stopped
+    cpus: 2.0
+    mem_limit: 1536m
     ports:
       - "3000:3000"
     env_file:
@@ -16,11 +17,29 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   db:
     image: postgres:16-alpine
     container_name: tnluxury_db
     restart: unless-stopped
+    cpus: 1.5
+    mem_limit: 2g
+    shm_size: 256mb
+    command:
+      [
+        "postgres",
+        "-c",
+        "shared_buffers=512MB",
+        "-c",
+        "effective_cache_size=2GB",
+        "-c",
+        "work_mem=8MB",
+        "-c",
+        "maintenance_work_mem=128MB",
+        "-c",
+        "max_connections=80",
+      ]
     environment:
       POSTGRES_DB: tnluxury
       POSTGRES_USER: tnluxury
@@ -37,7 +56,9 @@ services:
     image: redis:7-alpine
     container_name: tnluxury_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    cpus: 0.5
+    mem_limit: 512m
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
 
