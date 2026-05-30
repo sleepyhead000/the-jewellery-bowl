@@ -11,6 +11,7 @@ import type {
   HomepageTopbarModeConfig,
   HomepageDiscountMerchConfig,
 } from "@/lib/homepage-config";
+import type { FooterSettingsConfig, FooterLinkConfig, FooterSocialConfig } from "@/lib/footer-config";
 
 interface ShippingZone {
   id: string;
@@ -61,9 +62,147 @@ export default function AdminSettingsPage() {
         tabs={[
           { id: "shipping", label: "Shipping Zones", content: <ShippingZonesSection /> },
           { id: "payments", label: "Payment Accounts", content: <PaymentAccountsSection /> },
+          { id: "footer", label: "Footer + Social", content: <FooterSettingsSection /> },
           { id: "homepage-design", label: "Homepage Design", content: <HomepageDesignSettingsSection /> },
         ]}
       />
+    </div>
+  );
+}
+
+function FooterSettingsSection() {
+  const [form, setForm] = useState<FooterSettingsConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchFooterSettings = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
+    const res = await fetch("/api/admin/settings/footer");
+    const data = await res.json();
+    setForm(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchFooterSettings();
+  }, [fetchFooterSettings]);
+
+  const updateField = (key: keyof FooterSettingsConfig, value: string) => {
+    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
+
+  const updateLink = (group: "shopLinks" | "supportLinks" | "legalLinks", index: number, next: FooterLinkConfig) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+      return { ...prev, [group]: prev[group].map((entry, i) => (i === index ? next : entry)) };
+    });
+  };
+
+  const updateSocial = (index: number, next: FooterSocialConfig) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+      return { ...prev, socialLinks: prev.socialLinks.map((entry, i) => (i === index ? next : entry)) };
+    });
+  };
+
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form) return;
+    setSaving(true);
+    setMessage("");
+
+    const res = await fetch("/api/admin/settings/footer", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    setSaving(false);
+    if (!res.ok) {
+      setMessage("Failed to save footer settings.");
+      return;
+    }
+    setMessage("Footer settings saved.");
+  };
+
+  if (loading) return <p className="text-sm text-gray-500">Loading footer settings...</p>;
+  if (!form) return <p className="text-sm text-gray-500">Footer settings are unavailable.</p>;
+
+  return (
+    <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+      <p className="text-sm text-gray-500">Control the storefront footer copy, footer links, and social media URLs.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Input label="Brand Name" value={form.brandName} onChange={(e) => updateField("brandName", e.target.value)} />
+        <Input label="Newsletter Title" value={form.newsletterTitle} onChange={(e) => updateField("newsletterTitle", e.target.value)} />
+        <Input label="Newsletter Button" value={form.newsletterButtonLabel} onChange={(e) => updateField("newsletterButtonLabel", e.target.value)} />
+        <Input label="Newsletter Description" value={form.newsletterDescription} onChange={(e) => updateField("newsletterDescription", e.target.value)} />
+      </div>
+
+      <Textarea
+        label="Brand Description"
+        value={form.brandDescription}
+        onChange={(e) => updateField("brandDescription", e.target.value)}
+        rows={4}
+      />
+
+      <FooterLinksEditor title="Shop Links" links={form.shopLinks} onChange={(index, next) => updateLink("shopLinks", index, next)} />
+      <FooterLinksEditor title="Support Links" links={form.supportLinks} onChange={(index, next) => updateLink("supportLinks", index, next)} />
+      <FooterLinksEditor title="Legal Links" links={form.legalLinks} onChange={(index, next) => updateLink("legalLinks", index, next)} />
+
+      <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+        <h3 className="text-sm font-bold uppercase tracking-wide">Social Links</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {form.socialLinks.map((social, index) => (
+            <div key={social.platform} className="space-y-2 border border-gray-100 rounded p-3">
+              <label className="flex items-center gap-2 text-sm font-medium capitalize">
+                <input
+                  type="checkbox"
+                  checked={social.enabled}
+                  onChange={(e) => updateSocial(index, { ...social, enabled: e.target.checked })}
+                />
+                {social.platform}
+              </label>
+              <Input
+                label="URL"
+                value={social.href}
+                onChange={(e) => updateSocial(index, { ...social, href: e.target.value })}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Footer Settings"}</Button>
+        {message && <p className="text-sm text-gray-600">{message}</p>}
+      </div>
+    </form>
+  );
+}
+
+function FooterLinksEditor({
+  title,
+  links,
+  onChange,
+}: {
+  title: string;
+  links: FooterLinkConfig[];
+  onChange: (index: number, next: FooterLinkConfig) => void;
+}) {
+  return (
+    <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+      <h3 className="text-sm font-bold uppercase tracking-wide">{title}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {links.map((link, index) => (
+          <div key={`${title}-${index}`} className="grid grid-cols-1 gap-2 border border-gray-100 rounded p-3">
+            <Input label={`Label ${index + 1}`} value={link.label} onChange={(e) => onChange(index, { ...link, label: e.target.value })} />
+            <Input label={`URL ${index + 1}`} value={link.href} onChange={(e) => onChange(index, { ...link, href: e.target.value })} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

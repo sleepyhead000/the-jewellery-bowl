@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Facebook, Instagram, Twitter, ChevronDown } from "lucide-react";
 import { subscribeNewsletter } from "@/app/actions/newsletter";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { defaultFooterSettings, type FooterSettingsConfig } from "@/lib/footer-config";
 
 const B = {
     bg: "var(--color-surface)",
@@ -46,6 +47,20 @@ function FooterAccordion({ title, children }: { title: string; children: React.R
 export default function Footer() {
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [isPending, startTransition] = useTransition();
+    const [settings, setSettings] = useState<FooterSettingsConfig>(defaultFooterSettings);
+
+    useEffect(() => {
+        let active = true;
+        fetch("/api/footer-settings")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data: FooterSettingsConfig | null) => {
+                if (active && data) setSettings(data);
+            })
+            .catch(() => null);
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const handleSubmit = (formData: FormData) => {
         setMessage(null);
@@ -59,11 +74,10 @@ export default function Footer() {
         });
     };
 
-    const socialLinks = [
-        { Icon: Facebook,  href: "#" },
-        { Icon: Instagram, href: "#" },
-        { Icon: Twitter,   href: "#" },
-    ];
+    const socialIconMap = { facebook: Facebook, instagram: Instagram, twitter: Twitter };
+    const socialLinks = settings.socialLinks
+        .filter((entry) => entry.enabled)
+        .map((entry) => ({ Icon: socialIconMap[entry.platform], href: entry.href, platform: entry.platform }));
 
     return (
         <footer
@@ -82,10 +96,10 @@ export default function Footer() {
                             className="text-xs font-bold uppercase tracking-[0.2em] font-display"
                             style={{ color: B.text }}
                         >
-                            Get 10% Off
+                            {settings.newsletterTitle}
                         </h5>
                         <p className="text-sm font-body" style={{ color: B.muted }}>
-                            Join our list and get 10% off your first order.
+                            {settings.newsletterDescription}
                         </p>
                         <form action={handleSubmit} className="space-y-2">
                             <div
@@ -106,7 +120,7 @@ export default function Footer() {
                                     className="px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors duration-200 disabled:opacity-50"
                                     style={{ background: B.brand, color: B.text }}
                                 >
-                                    {isPending ? "..." : "Join"}
+                                    {isPending ? "..." : settings.newsletterButtonLabel}
                                 </button>
                             </div>
                             {message && (
@@ -129,18 +143,16 @@ export default function Footer() {
                                 color: B.text,
                             }}
                         >
-                            The Jewellery Bowl
+                            {settings.brandName}
                         </h4>
                         <div className="w-10 h-px" style={{ background: B.gold, opacity: 0.5 }} />
                         <p className="text-sm leading-relaxed font-body" style={{ color: B.muted }}>
-                            Experience the art of elegance with our premium collection of
-                            traditional Bengali accessories. Designed for those who carry
-                            culture in every movement.
+                            {settings.brandDescription}
                         </p>
                         <div className="flex gap-4 pt-2">
-                            {socialLinks.map(({ Icon, href }, i) => (
+                            {socialLinks.map(({ Icon, href, platform }) => (
                                 <Link
-                                    key={i}
+                                    key={platform}
                                     href={href}
                                     className="transition-colors duration-200 hover:text-[#C9A84C]"
                                     style={{ color: B.muted }}
@@ -154,12 +166,7 @@ export default function Footer() {
                     {/* Shop */}
                     <FooterAccordion title="Shop">
                         <ul className="space-y-2.5 text-sm font-body">
-                            {[
-                                { label: "All Products",  href: "/products" },
-                                { label: "New Arrivals",  href: "/products?sort=newest" },
-                                { label: "Featured",      href: "/products?featured=true" },
-                                { label: "Sale",          href: "/products?sale=true" },
-                            ].map((l) => (
+                            {settings.shopLinks.map((l) => (
                                 <li key={l.label}>
                                     <Link
                                         href={l.href}
@@ -176,12 +183,7 @@ export default function Footer() {
                     {/* Support */}
                     <FooterAccordion title="Support">
                         <ul className="space-y-2.5 text-sm font-body">
-                            {[
-                                { label: "Contact Us",    href: "#" },
-                                { label: "FAQs",          href: "#" },
-                                { label: "Shipping Info", href: "#" },
-                                { label: "Returns",       href: "#" },
-                            ].map((l) => (
+                            {settings.supportLinks.map((l) => (
                                 <li key={l.label}>
                                     <Link
                                         href={l.href}
@@ -203,9 +205,9 @@ export default function Footer() {
                 >
                     {/* Mobile social icons */}
                     <div className="flex gap-5 md:hidden">
-                        {socialLinks.map(({ Icon, href }, i) => (
+                        {socialLinks.map(({ Icon, href, platform }) => (
                             <Link
-                                key={i}
+                                key={platform}
                                 href={href}
                                 className="transition-colors duration-200 hover:text-[#C9A84C]"
                                 style={{ color: B.muted }}
@@ -217,13 +219,13 @@ export default function Footer() {
                     <div className="flex flex-col md:flex-row w-full justify-between items-center gap-4">
                         <p>&copy; {new Date().getFullYear()} The Jewellery Bowl. All rights reserved.</p>
                         <div className="flex gap-5">
-                            {["Privacy Policy", "Terms of Service"].map((l) => (
+                            {settings.legalLinks.map((l) => (
                                 <Link
-                                    key={l}
-                                    href="#"
+                                    key={l.label}
+                                    href={l.href}
                                     className="transition-colors duration-200 hover:text-[#E8D9B0]"
                                 >
-                                    {l}
+                                    {l.label}
                                 </Link>
                             ))}
                         </div>
