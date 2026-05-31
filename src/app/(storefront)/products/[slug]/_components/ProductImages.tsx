@@ -33,6 +33,7 @@ export default function ProductImages({ images, name }: Props) {
           src={images[selectedIndex]}
           alt={name}
           fill
+          unoptimized
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
@@ -48,7 +49,7 @@ export default function ProductImages({ images, name }: Props) {
                 i === selectedIndex ? "border-[var(--color-product-card-border)]" : "border-transparent hover:border-[var(--color-border)]"
               }`}
             >
-              <Image src={img} alt={`${name} ${i + 1}`} fill className="object-cover" sizes="80px" />
+              <Image src={img} alt={`${name} ${i + 1}`} fill unoptimized className="object-cover" sizes="80px" />
             </button>
           ))}
         </div>

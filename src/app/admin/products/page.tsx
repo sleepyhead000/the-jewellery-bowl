@@ -141,6 +141,7 @@ export default function AdminProductsPage() {
                     alt={product.name}
                     width={64}
                     height={64}
+                    unoptimized
                     className="h-16 w-16 shrink-0 object-cover"
                   />
                 ) : (
@@ -219,6 +220,7 @@ export default function AdminProductsPage() {
                             alt={product.name}
                             width={40}
                             height={40}
+                            unoptimized
                             className="w-10 h-10 object-cover rounded"
                           />
                         ) : (

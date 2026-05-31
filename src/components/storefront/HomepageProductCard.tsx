@@ -36,7 +36,7 @@ export default function HomepageProductCard(props: HomepageProductCardProps) {
                 style={{ borderColor: "var(--color-product-card-border)" }}
             >
                 <div className="relative aspect-[4/5]">
-                    <Image src={image} alt={name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                    <Image src={image} alt={name} fill unoptimized className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
                 </div>
             </div>
             <div className="pt-2 px-1">

@@ -11,6 +11,8 @@ services:
       - .env.production
     environment:
       HOSTNAME: 0.0.0.0
+    volumes:
+      - /root/the-jewellery-bowl-uploads:/app/uploads
     depends_on:
       - db
       - redis
