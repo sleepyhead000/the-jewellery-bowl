@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <span className="text-[var(--color-text-secondary)]">{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)] gap-8 lg:gap-12 items-start">
         <ProductDetailInteractive
           productId={product.id}
           productName={product.name}

@@ -24,7 +24,7 @@ export default function ProductImages({ images, name }: Props) {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="w-full max-w-[320px] mx-auto lg:mx-0 space-y-3 sm:space-y-4">
       <div
         className="relative aspect-square overflow-hidden border-[4px] bg-[var(--color-elevated)]"
         style={{ borderColor: "var(--color-product-card-border)" }}

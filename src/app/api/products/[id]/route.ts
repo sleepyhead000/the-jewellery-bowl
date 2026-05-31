@@ -94,6 +94,33 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const orderItemCount = await db.orderItem.count({
+    where: { variant: { productId: id } },
+  });
+
+  if (orderItemCount > 0) {
+    const product = await db.product.update({
+      where: { id },
+      data: { status: "ARCHIVED" },
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "PRODUCT_ARCHIVED_FOR_ORDER_HISTORY",
+        entity: "PRODUCT",
+        entityId: id,
+        details: { name: product.name, orderItemCount },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      archived: true,
+      message: "Product has order history, so it was archived instead of deleted.",
+    });
+  }
+
   await db.product.delete({ where: { id } });
   await db.auditLog.create({
     data: {
