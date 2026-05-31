@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, ChevronDown } from "lucide-react";
-import { subscribeNewsletter } from "@/app/actions/newsletter";
-import { useEffect, useState, useTransition } from "react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
+import { useEffect, useState } from "react";
 import { defaultFooterSettings, type FooterSettingsConfig } from "@/lib/footer-config";
 
 const B = {
@@ -17,27 +16,15 @@ const B = {
 };
 
 function FooterAccordion({ title, children }: { title: string; children: React.ReactNode }) {
-    const [open, setOpen] = useState(false);
     return (
-        <div className="md:border-0 border-b" style={{ borderColor: B.border }}>
-            <button
-                onClick={() => setOpen(!open)}
-                className="md:hidden flex w-full items-center justify-between py-4 text-xs font-bold uppercase tracking-[0.2em] font-display"
-                style={{ color: B.text }}
-            >
-                {title}
-                <ChevronDown
-                    className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
-                    style={{ color: B.muted }}
-                />
-            </button>
+        <div className="border-b pb-6 md:border-0 md:pb-0" style={{ borderColor: B.border }}>
             <h5
-                className="hidden md:block text-xs font-bold uppercase tracking-[0.2em] font-display mb-4"
+                className="mb-4 text-xs font-bold uppercase tracking-[0.2em] font-display"
                 style={{ color: B.text }}
             >
                 {title}
             </h5>
-            <div className={`${open ? "block" : "hidden"} md:block pb-4 md:pb-0`}>
+            <div>
                 {children}
             </div>
         </div>
@@ -45,8 +32,6 @@ function FooterAccordion({ title, children }: { title: string; children: React.R
 }
 
 export default function Footer() {
-    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [isPending, startTransition] = useTransition();
     const [settings, setSettings] = useState<FooterSettingsConfig>(defaultFooterSettings);
 
     useEffect(() => {
@@ -62,18 +47,6 @@ export default function Footer() {
         };
     }, []);
 
-    const handleSubmit = (formData: FormData) => {
-        setMessage(null);
-        startTransition(async () => {
-            const result = await subscribeNewsletter(formData);
-            if (result.success) {
-                setMessage({ type: "success", text: result.success });
-            } else if (result.error) {
-                setMessage({ type: "error", text: result.error });
-            }
-        });
-    };
-
     const socialIconMap = { facebook: Facebook, instagram: Instagram, twitter: Twitter };
     const socialLinks = settings.socialLinks
         .filter((entry) => entry.enabled && entry.href.trim().length > 0)
@@ -85,57 +58,9 @@ export default function Footer() {
             style={{ background: B.bg, borderTop: `1px solid ${B.border}` }}
         >
             <div className="container mx-auto px-4 md:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-12 mb-16">
-
-                    {/* Newsletter — first on mobile */}
-                    <div
-                        className="space-y-4 order-first md:order-last pb-6 md:pb-0 border-b md:border-0"
-                        style={{ borderColor: B.border }}
-                    >
-                        <h5
-                            className="text-xs font-bold uppercase tracking-[0.2em] font-display"
-                            style={{ color: B.text }}
-                        >
-                            {settings.newsletterTitle}
-                        </h5>
-                        <p className="text-sm font-body" style={{ color: B.muted }}>
-                            {settings.newsletterDescription}
-                        </p>
-                        <form action={handleSubmit} className="space-y-2">
-                            <div
-                                className="flex"
-                                style={{ border: `1px solid ${B.border}` }}
-                            >
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="EMAIL ADDRESS"
-                                    required
-                                    className="flex-1 px-3 py-2.5 text-xs outline-none font-body bg-transparent placeholder:tracking-widest"
-                                    style={{ color: B.text }}
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isPending}
-                                    className="px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors duration-200 disabled:opacity-50"
-                                    style={{ background: B.brand, color: B.text }}
-                                >
-                                    {isPending ? "..." : settings.newsletterButtonLabel}
-                                </button>
-                            </div>
-                            {message && (
-                                <p
-                                    className="text-xs font-body"
-                                    style={{ color: message.type === "success" ? B.gold : B.brand }}
-                                >
-                                    {message.text}
-                                </p>
-                            )}
-                        </form>
-                    </div>
-
-                    {/* Brand — desktop only */}
-                    <div className="space-y-4 hidden md:block">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-12 mb-16">
+                    {/* Brand */}
+                    <div className="space-y-4 border-b pb-6 md:border-0 md:pb-0" style={{ borderColor: B.border }}>
                         <h4
                             className="text-2xl font-bold uppercase tracking-tight font-display"
                             style={{

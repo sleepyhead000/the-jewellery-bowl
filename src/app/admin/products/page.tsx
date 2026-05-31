@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, Eye, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Package, Copy } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button, Badge, Pagination } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ export default function AdminProductsPage() {
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [copyingId, setCopyingId] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -47,13 +49,30 @@ export default function AdminProductsPage() {
   }, [page, status, search]);
 
   useEffect(() => {
-    fetchProducts();
+    void Promise.resolve().then(fetchProducts);
   }, [fetchProducts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
     if (res.ok) fetchProducts();
+  };
+
+  const handleCopy = async (id: string) => {
+    setCopyingId(id);
+    try {
+      const res = await fetch(`/api/products/${id}/copy`, { method: "POST" });
+
+      if (res.ok) {
+        await fetchProducts();
+        return;
+      }
+
+      const data = await res.json().catch(() => ({ error: "Failed to copy product" }));
+      alert(data.error || "Failed to copy product");
+    } finally {
+      setCopyingId(null);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -117,7 +136,13 @@ export default function AdminProductsPage() {
             <article key={product.id} className="border border-gray-200 bg-white p-4">
               <div className="flex gap-3">
                 {product.images[0] ? (
-                  <img src={product.images[0].url} alt={product.name} className="h-16 w-16 shrink-0 object-cover" />
+                  <Image
+                    src={product.images[0].url}
+                    alt={product.name}
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 shrink-0 object-cover"
+                  />
                 ) : (
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center bg-gray-100">
                     <Package className="h-5 w-5 text-gray-400" />
@@ -136,9 +161,18 @@ export default function AdminProductsPage() {
                 <div><span className="block text-xs font-bold uppercase text-gray-400">Price</span>{formatPrice(product.basePrice)}</div>
                 <div><span className="block text-xs font-bold uppercase text-gray-400">Stock</span>{totalStock(product.variants)}</div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-4 gap-2">
                 <Link href={`/products/${product.slug}`} target="_blank"><Button variant="outline" size="sm" className="w-full"><Eye className="h-4 w-4" /></Button></Link>
                 <Link href={`/admin/products/${product.id}/edit`}><Button variant="outline" size="sm" className="w-full"><Pencil className="h-4 w-4" /></Button></Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy(product.id)}
+                  disabled={copyingId === product.id}
+                  className="w-full"
+                >
+                  <Copy className={`h-4 w-4 ${copyingId === product.id ? "animate-pulse" : ""}`} />
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)} className="w-full text-red-500"><Trash2 className="h-4 w-4" /></Button>
               </div>
             </article>
@@ -180,9 +214,11 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {product.images[0] ? (
-                          <img
+                          <Image
                             src={product.images[0].url}
                             alt={product.name}
+                            width={40}
+                            height={40}
                             className="w-10 h-10 object-cover rounded"
                           />
                         ) : (
@@ -231,6 +267,13 @@ export default function AdminProductsPage() {
                             <Pencil className="h-4 w-4" />
                           </button>
                         </Link>
+                        <button
+                          onClick={() => handleCopy(product.id)}
+                          disabled={copyingId === product.id}
+                          className="p-1.5 text-gray-400 hover:text-black transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Copy className={`h-4 w-4 ${copyingId === product.id ? "animate-pulse" : ""}`} />
+                        </button>
                         <button
                           onClick={() => handleDelete(product.id)}
                           className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
