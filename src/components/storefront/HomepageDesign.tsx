@@ -121,7 +121,7 @@ export default function HomepageDesign(props: HomepageDesignProps) {
                     </div>
 
                     <div className="relative min-h-[220px] md:min-h-[400px] border border-[#5c4b4a]">
-                        <Image src={activeSlide.imageUrl} alt="Hero visual" fill className="object-cover" sizes="(max-width: 768px) 50vw, 324px" priority />
+                        <Image src={activeSlide.imageUrl} alt="Hero visual" fill unoptimized className="object-cover" sizes="(max-width: 768px) 50vw, 324px" priority />
                     </div>
                     <div className="hidden md:block" />
                 </div>
@@ -152,7 +152,7 @@ export default function HomepageDesign(props: HomepageDesignProps) {
                     <div className="container mx-auto max-w-[700px] px-3 md:px-6 grid grid-cols-1 md:grid-cols-2 items-center gap-7 md:gap-11">
                         
                         <div className="relative aspect-square w-full max-w-[280px] mx-auto md:ml-auto">
-                            <Image src={promoSection.imageUrl} alt="Promo visual" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                            <Image src={promoSection.imageUrl} alt="Promo visual" fill unoptimized className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                         </div>
                         
                         <div className="!text-white text-center md:text-left">
