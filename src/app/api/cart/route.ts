@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { runSecurityChecks, validationError, withRequestId } from "@/lib/api-security";
+import { resolveVariantSalePrice } from "@/lib/sales";
 
 // GET /api/cart — fetch current user's cart
 export async function GET() {
@@ -25,25 +26,29 @@ export async function GET() {
     },
   });
 
-  const mapped = items.map((item) => ({
-    id: item.id,
-    variantId: item.variantId,
-    quantity: item.quantity,
-    variant: {
-      id: item.variant.id,
-      sku: item.variant.sku,
-      price: item.variant.salePrice ?? item.variant.price,
-      originalPrice: item.variant.salePrice ? item.variant.price : null,
-      stock: item.variant.stock,
-      attributes: item.variant.attributes,
-    },
-    product: {
-      id: item.variant.product.id,
-      name: item.variant.product.name,
-      slug: item.variant.product.slug,
-      image: item.variant.product.images[0]?.url || null,
-    },
-  }));
+  const now = new Date();
+  const mapped = items.map((item) => {
+    const salePrice = resolveVariantSalePrice(item.variant, now);
+    return {
+      id: item.id,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      variant: {
+        id: item.variant.id,
+        sku: item.variant.sku,
+        price: salePrice ?? item.variant.price,
+        originalPrice: salePrice ? item.variant.price : null,
+        stock: item.variant.stock,
+        attributes: item.variant.attributes,
+      },
+      product: {
+        id: item.variant.product.id,
+        name: item.variant.product.name,
+        slug: item.variant.product.slug,
+        image: item.variant.product.images[0]?.url || null,
+      },
+    };
+  });
 
   const total = mapped.reduce((sum, i) => sum + i.variant.price * i.quantity, 0);
 

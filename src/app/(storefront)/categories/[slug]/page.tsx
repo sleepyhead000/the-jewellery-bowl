@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/storefront/ProductCard";
+import { getProductDisplayVariant } from "@/lib/sales";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -51,7 +52,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
-      include: { variants: { take: 1 }, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      include: { variants: { where: { isActive: true }, orderBy: { price: "asc" } }, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     }),
     db.product.count({ where }),
   ]);
@@ -128,18 +129,21 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              slug={product.slug}
-              name={product.name}
-              image={product.images[0]?.url || "/placeholder.svg"}
-              price={product.basePrice / 100}
-              salePrice={product.variants[0]?.salePrice ? product.variants[0].salePrice / 100 : undefined}
-              variantId={product.variants[0]?.id}
-            />
-          ))}
+          {products.map((product) => {
+            const variant = getProductDisplayVariant(product.variants, new Date());
+            return (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                slug={product.slug}
+                name={product.name}
+                image={product.images[0]?.url || "/placeholder.svg"}
+                price={(variant?.price ?? product.basePrice) / 100}
+                salePrice={variant?.activeSalePrice ? variant.activeSalePrice / 100 : undefined}
+                variantId={variant?.id}
+              />
+            );
+          })}
         </div>
       )}
 

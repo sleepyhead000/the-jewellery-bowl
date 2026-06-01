@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button, Badge, Pagination } from "@/components/ui";
 import { formatPrice } from "@/lib/utils";
+import { getProductDisplayVariant } from "@/lib/sales";
 
 interface Product {
   id: string;
@@ -16,7 +17,16 @@ interface Product {
   isFeatured: boolean;
   images: { id: string; url: string }[];
   category: { id: string; name: string } | null;
-  variants: { id: string; stock: number; salePrice: number | null }[];
+  variants: {
+    id: string;
+    price: number;
+    stock: number;
+    salePrice: number | null;
+    saleEnabled: boolean;
+    saleStartsAt: string | null;
+    saleEndsAt: string | null;
+    isActive: boolean;
+  }[];
   _count: { reviews: number };
 }
 
@@ -142,7 +152,9 @@ export default function AdminProductsPage() {
             <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />No products found
           </div>
         ) : (
-          data?.products.map((product) => (
+          data?.products.map((product) => {
+            const variant = getProductDisplayVariant(product.variants, new Date());
+            return (
             <article key={product.id} className="border border-gray-200 bg-white p-4">
               <div className="flex gap-3">
                 {product.images[0] ? (
@@ -169,7 +181,7 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div><span className="block text-xs font-bold uppercase text-gray-400">Price</span>{formatPrice(product.basePrice)}</div>
+                <div><span className="block text-xs font-bold uppercase text-gray-400">Price</span>{formatPrice(variant?.effectivePrice ?? product.basePrice)}</div>
                 <div><span className="block text-xs font-bold uppercase text-gray-400">Stock</span>{totalStock(product.variants)}</div>
               </div>
               <div className="mt-4 grid grid-cols-4 gap-2">
@@ -187,7 +199,8 @@ export default function AdminProductsPage() {
                 <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)} className="w-full text-red-500"><Trash2 className="h-4 w-4" /></Button>
               </div>
             </article>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -220,7 +233,9 @@ export default function AdminProductsPage() {
                   </td>
                 </tr>
               ) : (
-                data?.products.map((product) => (
+                data?.products.map((product) => {
+                  const variant = getProductDisplayVariant(product.variants, new Date());
+                  return (
                   <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -250,10 +265,10 @@ export default function AdminProductsPage() {
                       {product.category?.name || "—"}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="text-sm font-medium">{formatPrice(product.basePrice)}</div>
-                      {product.variants[0]?.salePrice && (
+                      <div className="text-sm font-medium">{formatPrice(variant?.effectivePrice ?? product.basePrice)}</div>
+                      {variant?.activeSalePrice && (
                         <div className="text-xs text-gray-400 line-through">
-                          {formatPrice(product.variants[0].salePrice)}
+                          {formatPrice(variant.price)}
                         </div>
                       )}
                     </td>
@@ -295,7 +310,8 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:migrate": "npx prisma migrate dev",
     "db:push": "npx prisma db push",
+    "db:backfill-sales": "npx tsx prisma/backfill-sales.ts",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate"

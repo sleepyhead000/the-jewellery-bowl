@@ -74,8 +74,8 @@ async function main() {
       isFeatured: true,
       tags: ["iphone", "leather", "premium"],
       variants: [
-        { sku: "CASE-IP15PM-BLK", price: 250000, salePrice: 150000, stock: 50, attributes: { color: "Black" } },
-        { sku: "CASE-IP15PM-BRN", price: 250000, salePrice: 150000, stock: 30, attributes: { color: "Brown" } },
+        { sku: "CASE-IP15PM-BLK", price: 250000, salePrice: 150000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 150000, stock: 50, attributes: { color: "Black" } },
+        { sku: "CASE-IP15PM-BRN", price: 250000, salePrice: 150000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 150000, stock: 30, attributes: { color: "Brown" } },
         { sku: "CASE-IP15PM-TAN", price: 250000, salePrice: null, stock: 20, attributes: { color: "Tan" } },
       ],
     },
@@ -89,8 +89,8 @@ async function main() {
       isFeatured: true,
       tags: ["sunglasses", "uv400", "polarized"],
       variants: [
-        { sku: "SG-UV400-BLK", price: 350000, salePrice: 280000, stock: 40, attributes: { color: "Black" } },
-        { sku: "SG-UV400-GLD", price: 350000, salePrice: 280000, stock: 25, attributes: { color: "Gold" } },
+        { sku: "SG-UV400-BLK", price: 350000, salePrice: 280000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 280000, stock: 40, attributes: { color: "Black" } },
+        { sku: "SG-UV400-GLD", price: 350000, salePrice: 280000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 280000, stock: 25, attributes: { color: "Gold" } },
       ],
     },
     {
@@ -103,7 +103,7 @@ async function main() {
       isFeatured: true,
       tags: ["bag", "crossbody", "luxury"],
       variants: [
-        { sku: "BAG-CB-BLK", price: 850000, salePrice: 750000, stock: 15, attributes: { color: "Black" } },
+        { sku: "BAG-CB-BLK", price: 850000, salePrice: 750000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 750000, stock: 15, attributes: { color: "Black" } },
         { sku: "BAG-CB-WHT", price: 850000, salePrice: null, stock: 10, attributes: { color: "White" } },
       ],
     },
@@ -117,8 +117,8 @@ async function main() {
       isFeatured: true,
       tags: ["watch", "smart", "fitness"],
       variants: [
-        { sku: "SW-S9-BLK-45", price: 1200000, salePrice: 1050000, stock: 20, attributes: { color: "Black", size: "45mm" } },
-        { sku: "SW-S9-SLV-41", price: 1100000, salePrice: 950000, stock: 15, attributes: { color: "Silver", size: "41mm" } },
+        { sku: "SW-S9-BLK-45", price: 1200000, salePrice: 1050000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 1050000, stock: 20, attributes: { color: "Black", size: "45mm" } },
+        { sku: "SW-S9-SLV-41", price: 1100000, salePrice: 950000, saleEnabled: true, saleDiscountType: "PRICE", saleDiscountValue: 950000, stock: 15, attributes: { color: "Silver", size: "41mm" } },
       ],
     },
     {

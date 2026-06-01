@@ -8,15 +8,20 @@ import {
   type SearchResponse,
   type SearchSuggestion,
 } from "@/lib/search";
+import { resolveVariantSalePrice } from "@/lib/sales";
 
 type ProductSearchRow = {
   id: string;
   slug: string;
   name: string;
   basePrice: number;
+  variantPrice: number | null;
   score: number;
   imageUrl: string | null;
   salePrice: number | null;
+  saleEnabled: boolean | null;
+  saleStartsAt: Date | null;
+  saleEndsAt: Date | null;
 };
 
 const isPostgresDatabase = (): boolean => {
@@ -33,8 +38,17 @@ const mapToSearchSuggestion = (row: ProductSearchRow): SearchSuggestion => {
     slug: row.slug,
     name: row.name,
     imageUrl: row.imageUrl,
-    price: row.basePrice,
-    salePrice: row.salePrice,
+    price: row.variantPrice ?? row.basePrice,
+    salePrice: row.variantPrice
+      ? resolveVariantSalePrice({
+          id: row.id,
+          price: row.variantPrice,
+          salePrice: row.salePrice,
+          saleEnabled: row.saleEnabled ?? false,
+          saleStartsAt: row.saleStartsAt,
+          saleEndsAt: row.saleEndsAt,
+        }, new Date())
+      : null,
     score: row.score,
   };
 };
@@ -58,12 +72,41 @@ const searchWithPostgres = async (query: string): Promise<SearchSuggestion[]> =>
         LIMIT 1
       ) AS "imageUrl",
       (
+        SELECT pv.price
+        FROM "ProductVariant" pv
+        WHERE pv."productId" = p.id AND pv."isActive" = true
+        ORDER BY pv.price ASC
+        LIMIT 1
+      ) AS "variantPrice",
+      (
         SELECT pv."salePrice"
         FROM "ProductVariant" pv
         WHERE pv."productId" = p.id AND pv."isActive" = true
         ORDER BY pv.price ASC
         LIMIT 1
       ) AS "salePrice"
+      ,
+      (
+        SELECT pv."saleEnabled"
+        FROM "ProductVariant" pv
+        WHERE pv."productId" = p.id AND pv."isActive" = true
+        ORDER BY pv.price ASC
+        LIMIT 1
+      ) AS "saleEnabled",
+      (
+        SELECT pv."saleStartsAt"
+        FROM "ProductVariant" pv
+        WHERE pv."productId" = p.id AND pv."isActive" = true
+        ORDER BY pv.price ASC
+        LIMIT 1
+      ) AS "saleStartsAt",
+      (
+        SELECT pv."saleEndsAt"
+        FROM "ProductVariant" pv
+        WHERE pv."productId" = p.id AND pv."isActive" = true
+        ORDER BY pv.price ASC
+        LIMIT 1
+      ) AS "saleEndsAt"
     FROM "Product" p
     WHERE
       p.status = 'ACTIVE'
@@ -98,7 +141,7 @@ const searchWithSqlite = async (query: string): Promise<SearchSuggestion[]> => {
         where: { isActive: true },
         orderBy: { price: "asc" },
         take: 1,
-        select: { salePrice: true },
+        select: { id: true, price: true, salePrice: true, saleEnabled: true, saleStartsAt: true, saleEndsAt: true },
       },
     },
     take: SEARCH_MAX_RESULTS,
@@ -106,13 +149,15 @@ const searchWithSqlite = async (query: string): Promise<SearchSuggestion[]> => {
   });
 
   return products.map((item) => {
+    const variant = item.variants[0];
+    const salePrice = variant ? resolveVariantSalePrice(variant, new Date()) : null;
     return {
       id: item.id,
       slug: item.slug,
       name: item.name,
       imageUrl: item.images[0]?.url ?? null,
-      price: item.basePrice,
-      salePrice: item.variants[0]?.salePrice ?? null,
+      price: variant?.price ?? item.basePrice,
+      salePrice,
       score: undefined,
     };
   });

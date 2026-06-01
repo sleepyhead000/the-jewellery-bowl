@@ -4,6 +4,24 @@ import { hasPermission } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
+import type { Prisma } from "@/generated/prisma/client";
+import { normalizeSaleSettings } from "@/lib/sales";
+
+const variantSchema = z.object({
+  id: z.string().optional(),
+  sku: z.string().trim().optional(),
+  price: z.number().int().positive(),
+  salePrice: z.number().int().positive().optional().nullable(),
+  saleEnabled: z.boolean().optional(),
+  saleStartsAt: z.coerce.date().optional().nullable(),
+  saleEndsAt: z.coerce.date().optional().nullable(),
+  saleDiscountType: z.enum(["PRICE", "PERCENT"]).optional(),
+  saleDiscountValue: z.number().int().positive().optional().nullable(),
+  stock: z.number().int().min(0).optional(),
+  attributes: z.record(z.string(), z.string()).optional(),
+  weight: z.number().int().optional().nullable(),
+  isActive: z.boolean().optional(),
+});
 
 const updateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -16,7 +34,30 @@ const updateSchema = z.object({
   isFeatured: z.boolean().optional(),
   metaTitle: z.string().optional().nullable(),
   metaDescription: z.string().optional().nullable(),
+  variants: z.array(variantSchema).optional(),
+  images: z.array(z.object({
+    url: z.string(),
+    alt: z.string().optional(),
+    sortOrder: z.number().int().optional(),
+  })).optional(),
 });
+
+type VariantInput = z.infer<typeof variantSchema>;
+
+const generateVariantSku = async (productId: string): Promise<string> => {
+  let attempt = 0;
+  while (attempt < 1000) {
+    const candidate = `VAR-${productId.slice(-6).toUpperCase()}-${Date.now().toString().slice(-6)}-${attempt + 1}`;
+    const existing = await db.productVariant.findUnique({ where: { sku: candidate } });
+    if (!existing) return candidate;
+    attempt += 1;
+  }
+  throw new Error("Unable to generate unique SKU for variant");
+};
+
+function normalizeVariantSale(variant: VariantInput): VariantInput {
+  return { ...variant, ...normalizeSaleSettings(variant) };
+}
 
 export async function GET(
   _req: NextRequest,
@@ -61,23 +102,113 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const data = parsed.data;
+  const { variants, images, ...data } = parsed.data;
   if (data.name && !data.slug) {
     data.slug = slugify(data.name);
   }
 
-  const product = await db.product.update({
-    where: { id },
-    data: data,
-    include: { variants: true, images: true, category: true },
-  });
+  let normalizedVariants: VariantInput[] | undefined;
+  try {
+    normalizedVariants = variants?.map(normalizeVariantSale);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid sale settings" }, { status: 400 });
+  }
+
+  let product;
+  try {
+    product = await db.$transaction(async (tx) => {
+      const updatedProduct = await tx.product.update({
+        where: { id },
+        data,
+        include: { variants: true, images: true, category: true },
+      });
+
+    if (images) {
+      await tx.productImage.deleteMany({ where: { productId: id } });
+      if (images.length > 0) {
+        await tx.productImage.createMany({
+          data: images.map((image, index) => ({
+            productId: id,
+            url: image.url,
+            alt: image.alt,
+            sortOrder: image.sortOrder ?? index,
+          })),
+        });
+      }
+    }
+
+    if (normalizedVariants) {
+      const existingVariants = await tx.productVariant.findMany({
+        where: { productId: id },
+        select: { id: true },
+      });
+      const submittedIds = normalizedVariants
+        .map((variant) => variant.id)
+        .filter((variantId): variantId is string => Boolean(variantId));
+      const removedIds = existingVariants
+        .map((variant) => variant.id)
+        .filter((variantId) => !submittedIds.includes(variantId));
+
+      if (removedIds.length > 0) {
+        const variantsWithOrders = await tx.orderItem.findMany({
+          where: { variantId: { in: removedIds } },
+          select: { variantId: true },
+          distinct: ["variantId"],
+        });
+        const protectedIds = variantsWithOrders.map((entry) => entry.variantId);
+        const deletableIds = removedIds.filter((variantId) => !protectedIds.includes(variantId));
+        if (deletableIds.length > 0) {
+          await tx.productVariant.deleteMany({ where: { id: { in: deletableIds } } });
+        }
+        if (protectedIds.length > 0) {
+          await tx.productVariant.updateMany({ where: { id: { in: protectedIds } }, data: { isActive: false } });
+        }
+      }
+
+      for (const variant of normalizedVariants) {
+        const { id: variantId, attributes, ...variantData } = variant;
+        const normalizedSku = variantData.sku?.trim();
+        const sku = normalizedSku && normalizedSku.length > 0 ? normalizedSku : await generateVariantSku(id);
+        const dataWithAttributes = {
+          ...variantData,
+          sku,
+          ...(attributes !== undefined && { attributes: attributes as Prisma.InputJsonValue }),
+        };
+
+        if (variantId) {
+          const result = await tx.productVariant.updateMany({
+            where: { id: variantId, productId: id },
+            data: dataWithAttributes,
+          });
+          if (result.count !== 1) {
+            throw new Error("Variant does not belong to this product");
+          }
+        } else {
+          await tx.productVariant.create({
+            data: { ...dataWithAttributes, productId: id },
+          });
+        }
+      }
+    }
+
+      return tx.product.findUniqueOrThrow({
+        where: { id: updatedProduct.id },
+        include: { variants: true, images: true, category: true },
+      });
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to update product" },
+      { status: 400 }
+    );
+  }
   await db.auditLog.create({
     data: {
       userId: session.user.id,
       action: "PRODUCT_UPDATED",
       entity: "PRODUCT",
       entityId: id,
-      details: data,
+      details: { ...data, variantsUpdated: Boolean(normalizedVariants), imagesUpdated: Boolean(images) },
     },
   });
 

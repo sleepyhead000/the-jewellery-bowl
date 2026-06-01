@@ -12,6 +12,7 @@ import {
     normalizeHomepageLayoutConfig,
     normalizeHomepageTranslations,
 } from "@/lib/homepage-config";
+import { getProductDisplayVariant } from "@/lib/sales";
 
 export const revalidate = 120;
 
@@ -34,10 +35,18 @@ function mapProduct(product: {
     slug: string;
     name: string;
     basePrice: number;
-    variants: Array<{ id: string; price: number; salePrice: number | null }>;
+    variants: Array<{
+        id: string;
+        price: number;
+        salePrice: number | null;
+        saleEnabled: boolean;
+        saleStartsAt: Date | null;
+        saleEndsAt: Date | null;
+        isActive: boolean;
+    }>;
     images: Array<{ url: string }>;
 }): HomepageProduct {
-    const variant = product.variants[0];
+    const variant = getProductDisplayVariant(product.variants, new Date());
     const image = product.images[0];
     return {
         id: product.id,
@@ -45,7 +54,7 @@ function mapProduct(product: {
         name: product.name,
         image: image?.url ?? "https://placehold.co/600x800/e6e0e0/8b7b7b?text=No+Image",
         price: (variant?.price ?? product.basePrice) / 100,
-        salePrice: variant?.salePrice ? variant.salePrice / 100 : undefined,
+        salePrice: variant?.activeSalePrice ? variant.activeSalePrice / 100 : undefined,
         variantId: variant?.id,
     };
 }
@@ -54,8 +63,16 @@ async function resolveProductsForSection(
     section: HomepageSectionConfig,
     pinnedDiscountProductIds: string[]
 ): Promise<HomepageProduct[]> {
+    const now = new Date();
+    const activeSaleVariantWhere = {
+        isActive: true,
+        saleEnabled: true,
+        salePrice: { not: null },
+        OR: [{ saleStartsAt: null }, { saleStartsAt: { lte: now } }],
+        AND: [{ OR: [{ saleEndsAt: null }, { saleEndsAt: { gte: now } }] }],
+    };
     const include = {
-        variants: { where: { isActive: true }, orderBy: { price: "asc" as const }, take: 1 },
+        variants: { where: { isActive: true }, orderBy: { price: "asc" as const } },
         images: { orderBy: { sortOrder: "asc" as const }, take: 1 },
     };
 
@@ -86,7 +103,7 @@ async function resolveProductsForSection(
                   where: {
                       id: { in: pinnedDiscountProductIds },
                       status: "ACTIVE",
-                      variants: { some: { isActive: true, salePrice: { not: null } } },
+                      variants: { some: activeSaleVariantWhere },
                   },
                   include,
               })
@@ -102,7 +119,7 @@ async function resolveProductsForSection(
                 ? await db.product.findMany({
                       where: {
                           status: "ACTIVE",
-                          variants: { some: { isActive: true, salePrice: { not: null } } },
+                          variants: { some: activeSaleVariantWhere },
                           id: { notIn: orderedPinned.map((product) => product.id) },
                       },
                       include,

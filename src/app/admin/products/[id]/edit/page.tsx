@@ -7,6 +7,14 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+function toDateTimeLocal(value: unknown): string {
+  if (!value) return "";
+  const date = new Date(value as string);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
 export default function EditProductPage({ params }: Props) {
   const { id } = use(params);
   const [product, setProduct] = useState<Record<string, unknown> | null>(null);
@@ -54,6 +62,14 @@ export default function EditProductPage({ params }: Props) {
       sku: (v.sku as string) || "",
       price: (v.price as number) / 100,
       salePrice: v.salePrice ? (v.salePrice as number) / 100 : 0,
+      saleEnabled: Boolean(v.saleEnabled),
+      saleStartsAt: toDateTimeLocal(v.saleStartsAt),
+      saleEndsAt: toDateTimeLocal(v.saleEndsAt),
+      saleDiscountType: v.saleDiscountType === "PERCENT" ? "PERCENT" as const : "PRICE" as const,
+      saleDiscountValue:
+        v.saleDiscountType === "PERCENT"
+          ? (v.saleDiscountValue as number | null) ?? 0
+          : ((v.saleDiscountValue as number | null) ?? (v.salePrice as number | null) ?? 0) / 100,
       stock: v.stock as number,
       attributes: (v.attributes as Record<string, string>) || {},
     })),

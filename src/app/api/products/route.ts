@@ -5,16 +5,28 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
+import { normalizeSaleSettings } from "@/lib/sales";
 
 const variantSchema = z.object({
   sku: z.string().trim().optional(),
   price: z.number().int().positive(),
   salePrice: z.number().int().positive().optional().nullable(),
+  saleEnabled: z.boolean().optional(),
+  saleStartsAt: z.coerce.date().optional().nullable(),
+  saleEndsAt: z.coerce.date().optional().nullable(),
+  saleDiscountType: z.enum(["PRICE", "PERCENT"]).optional(),
+  saleDiscountValue: z.number().int().positive().optional().nullable(),
   stock: z.number().int().min(0).optional(),
   attributes: z.record(z.string(), z.string()).optional(),
   weight: z.number().int().optional().nullable(),
   isActive: z.boolean().optional(),
 });
+
+type VariantInput = z.infer<typeof variantSchema>;
+
+function normalizeVariantSale(variant: VariantInput): VariantInput {
+  return { ...variant, ...normalizeSaleSettings(variant) };
+}
 
 const generateVariantSku = async (productName: string, index: number): Promise<string> => {
   const base = slugify(productName).toUpperCase() || "VARIANT";
@@ -70,7 +82,15 @@ export async function GET(req: NextRequest) {
     ];
   }
   if (sale === "true") {
-    where.variants = { some: { salePrice: { not: null } } };
+    const now = new Date();
+    where.variants = {
+      some: {
+        saleEnabled: true,
+        salePrice: { not: null },
+        OR: [{ saleStartsAt: null }, { saleStartsAt: { lte: now } }],
+        AND: [{ OR: [{ saleEndsAt: null }, { saleEndsAt: { gte: now } }] }],
+      },
+    };
   }
 
   const orderBy: Record<string, string> = {};
@@ -130,9 +150,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Product with this slug already exists" }, { status: 409 });
   }
 
-  const variantsWithSku = variants
+  let normalizedVariants: VariantInput[] | undefined;
+  try {
+    normalizedVariants = variants?.map(normalizeVariantSale);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid sale settings" }, { status: 400 });
+  }
+
+  const variantsWithSku = normalizedVariants
     ? await Promise.all(
-        variants.map(async (variant, index) => {
+        normalizedVariants.map(async (variant, index) => {
           const normalizedSku = variant.sku?.trim();
           const sku = normalizedSku && normalizedSku.length > 0
             ? normalizedSku

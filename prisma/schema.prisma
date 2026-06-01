@@ -144,6 +144,11 @@ model ProductVariant {
   sku        String  @unique
   price      Int // paisa
   salePrice  Int? // paisa
+  saleEnabled Boolean @default(false)
+  saleStartsAt DateTime?
+  saleEndsAt DateTime?
+  saleDiscountType String @default("PRICE")
+  saleDiscountValue Int?
   stock      Int     @default(0)
   attributes Json?   // {color: "Black", size: "XL"}
   weight     Int?    // grams

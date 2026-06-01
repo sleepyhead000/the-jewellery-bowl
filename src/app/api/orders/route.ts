@@ -7,6 +7,7 @@ import { notifyPaymentSubmitted } from "@/lib/discord";
 import { sendAdminPushNotification, sendUserPushNotification } from "@/lib/push";
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { validateOriginForMutations } from "@/lib/api-security";
+import { resolveVariantSalePrice } from "@/lib/sales";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
   }> = [];
 
   for (const item of cartItems) {
-    const price = item.variant.salePrice ?? item.variant.price;
+    const price = resolveVariantSalePrice(item.variant, new Date()) ?? item.variant.price;
 
     // Check stock with current data
     if (item.quantity > item.variant.stock) {

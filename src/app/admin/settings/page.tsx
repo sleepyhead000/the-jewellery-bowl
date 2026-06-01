@@ -1165,7 +1165,7 @@ function HomepageDesignSettingsSection() {
 
       <div className="border border-gray-200 rounded-lg p-4 space-y-4">
         <h3 className="text-sm font-bold uppercase tracking-wide">Discount Section Pinning</h3>
-        <p className="text-xs text-gray-500">Pinned products appear first in auto discount sections (salePrice source of truth).</p>
+        <p className="text-xs text-gray-500">Pinned products appear first in auto discount sections when their sale toggle is active.</p>
         <div className="max-h-72 overflow-auto border border-gray-200 rounded-lg p-3 space-y-2">
           {products.map((p) => (
             <label key={`discount-pin-${p.id}`} className="flex items-center gap-2 text-sm">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, Tag } from "lucide-react";
 import { Button, Input, Textarea } from "@/components/ui";
 
 interface Category {
@@ -17,6 +17,11 @@ interface Variant {
   sku: string;
   price: number;
   salePrice: number;
+  saleEnabled: boolean;
+  saleStartsAt: string;
+  saleEndsAt: string;
+  saleDiscountType: "PRICE" | "PERCENT";
+  saleDiscountValue: number;
   stock: number;
   attributes: Record<string, string>;
 }
@@ -37,7 +42,29 @@ interface ProductFormProps {
   initialData?: ProductFormData & { id: string };
 }
 
-const emptyVariant: Variant = { displayName: "", sku: "", price: 0, salePrice: 0, stock: 0, attributes: {} };
+const emptyVariant: Variant = {
+  displayName: "",
+  sku: "",
+  price: 0,
+  salePrice: 0,
+  saleEnabled: false,
+  saleStartsAt: "",
+  saleEndsAt: "",
+  saleDiscountType: "PRICE",
+  saleDiscountValue: 0,
+  stock: 0,
+  attributes: {},
+};
+
+function toSalePrice(price: number, saleDiscountType: "PRICE" | "PERCENT", saleDiscountValue: number): number {
+  if (saleDiscountType === "PRICE") return saleDiscountValue;
+  return Math.round(price * (100 - saleDiscountValue) / 100 * 100) / 100;
+}
+
+function toApiDate(value: string): string | null {
+  if (value.trim().length === 0) return null;
+  return new Date(value).toISOString();
+}
 
 export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
@@ -111,6 +138,20 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     e.preventDefault();
     setSaving(true);
 
+    const invalidSale = form.variants.find((variant) => {
+      if (!variant.saleEnabled) return false;
+      if (variant.saleDiscountValue <= 0) return true;
+      if (variant.saleDiscountType === "PERCENT" && (variant.saleDiscountValue < 1 || variant.saleDiscountValue > 99)) return true;
+      const salePrice = toSalePrice(variant.price, variant.saleDiscountType, variant.saleDiscountValue);
+      return salePrice <= 0 || salePrice >= variant.price;
+    });
+
+    if (invalidSale) {
+      alert("Sale value must create a final sale price lower than the variant price. Percentage sales must be between 1 and 99.");
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       name: form.name,
       description: form.description,
@@ -131,10 +172,25 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           delete attributes.displayName;
         }
 
+        const saleDiscountValue = v.saleEnabled
+          ? v.saleDiscountType === "PRICE"
+            ? Math.round(v.saleDiscountValue * 100)
+            : Math.round(v.saleDiscountValue)
+          : null;
+        const salePrice = v.saleEnabled
+          ? Math.round(toSalePrice(v.price, v.saleDiscountType, v.saleDiscountValue) * 100)
+          : null;
+
         return {
+          id: v.id,
           sku: v.sku,
           price: Math.round(v.price * 100),
-          salePrice: v.salePrice ? Math.round(v.salePrice * 100) : null,
+          salePrice,
+          saleEnabled: v.saleEnabled,
+          saleStartsAt: toApiDate(v.saleStartsAt),
+          saleEndsAt: toApiDate(v.saleEndsAt),
+          saleDiscountType: v.saleDiscountType,
+          saleDiscountValue,
           stock: v.stock,
           attributes,
         };
@@ -299,7 +355,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Input
                   label="Variant Name"
                   value={variant.displayName}
@@ -320,19 +376,80 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   onChange={(e) => updateVariant(index, { price: parseFloat(e.target.value) || 0 })}
                 />
                 <Input
-                  label="Sale Price (BDT)"
-                  type="number"
-                  step="0.01"
-                  value={variant.salePrice.toString()}
-                  onChange={(e) => updateVariant(index, { salePrice: parseFloat(e.target.value) || 0 })}
-                />
-                <Input
                   label="Stock"
                   type="number"
                   value={variant.stock.toString()}
                   onChange={(e) => updateVariant(index, { stock: parseInt(e.target.value) || 0 })}
                   required
                 />
+              </div>
+              <div className="border border-gray-100 bg-gray-50 p-3 space-y-3">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    checked={variant.saleEnabled}
+                    onChange={(e) =>
+                      updateVariant(index, {
+                        saleEnabled: e.target.checked,
+                        saleDiscountValue: e.target.checked
+                          ? variant.saleDiscountValue || variant.salePrice || 0
+                          : variant.saleDiscountValue,
+                      })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <Tag className="h-4 w-4" />
+                  Sale enabled
+                </label>
+                {variant.saleEnabled && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2">Discount Type</label>
+                        <select
+                          value={variant.saleDiscountType}
+                          onChange={(e) =>
+                            updateVariant(index, {
+                              saleDiscountType: e.target.value as "PRICE" | "PERCENT",
+                              saleDiscountValue: 0,
+                            })
+                          }
+                          className="w-full border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-black"
+                        >
+                          <option value="PRICE">Sale price</option>
+                          <option value="PERCENT">% off</option>
+                        </select>
+                      </div>
+                      <Input
+                        label={variant.saleDiscountType === "PRICE" ? "Sale Price (BDT)" : "Percent Off"}
+                        type="number"
+                        step={variant.saleDiscountType === "PRICE" ? "0.01" : "1"}
+                        value={variant.saleDiscountValue.toString()}
+                        onChange={(e) => updateVariant(index, { saleDiscountValue: parseFloat(e.target.value) || 0 })}
+                      />
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wide mb-2">Final Sale Price</label>
+                        <div className="flex min-h-[46px] items-center border border-gray-200 bg-white px-4 text-sm">
+                          BDT {toSalePrice(variant.price, variant.saleDiscountType, variant.saleDiscountValue).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Input
+                        label="Sale Starts"
+                        type="datetime-local"
+                        value={variant.saleStartsAt}
+                        onChange={(e) => updateVariant(index, { saleStartsAt: e.target.value })}
+                      />
+                      <Input
+                        label="Sale Ends"
+                        type="datetime-local"
+                        value={variant.saleEndsAt}
+                        onChange={(e) => updateVariant(index, { saleEndsAt: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}

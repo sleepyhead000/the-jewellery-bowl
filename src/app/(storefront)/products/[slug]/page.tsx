@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/storefront/ProductCard";
 import ProductDetailInteractive from "./_components/ProductDetailInteractive";
+import { getProductDisplayVariant, resolveVariantSalePrice } from "@/lib/sales";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -63,8 +64,9 @@ export default async function ProductDetailPage({ params }: Props) {
       id: { not: product.id },
     },
     take: 4,
-    include: { variants: { take: 1 }, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    include: { variants: { where: { isActive: true }, orderBy: { price: "asc" } }, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
+  const now = new Date();
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 pb-28 md:pb-12">
@@ -97,7 +99,7 @@ export default async function ProductDetailPage({ params }: Props) {
             name: getVariantDisplayName(v.attributes, index),
             sku: v.sku,
             price: v.price,
-            salePrice: v.salePrice,
+            salePrice: resolveVariantSalePrice(v, now),
             stock: v.stock,
           }))}
           images={product.images.map((img) => ({ url: img.url, variantId: img.variantId ?? null }))}
@@ -136,18 +138,21 @@ export default async function ProductDetailPage({ params }: Props) {
         <section className="mt-14 sm:mt-20">
           <h2 className="text-lg font-bold uppercase tracking-tight mb-8">You May Also Like</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 sm:gap-6">
-            {relatedProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                slug={p.slug}
-                name={p.name}
-                image={p.images[0]?.url || "/placeholder.svg"}
-                price={p.basePrice / 100}
-                salePrice={p.variants[0]?.salePrice ? p.variants[0].salePrice / 100 : undefined}
-                variantId={p.variants[0]?.id}
-              />
-            ))}
+            {relatedProducts.map((p) => {
+              const variant = getProductDisplayVariant(p.variants, now);
+              return (
+                <ProductCard
+                  key={p.id}
+                  id={p.id}
+                  slug={p.slug}
+                  name={p.name}
+                  image={p.images[0]?.url || "/placeholder.svg"}
+                  price={(variant?.price ?? p.basePrice) / 100}
+                  salePrice={variant?.activeSalePrice ? variant.activeSalePrice / 100 : undefined}
+                  variantId={variant?.id}
+                />
+              );
+            })}
           </div>
         </section>
       )}

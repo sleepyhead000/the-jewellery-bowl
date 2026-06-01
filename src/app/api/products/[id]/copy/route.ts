@@ -14,6 +14,11 @@ type CopiedVariant = {
   sku: string;
   price: number;
   salePrice: number | null;
+  saleEnabled: boolean;
+  saleStartsAt: Date | null;
+  saleEndsAt: Date | null;
+  saleDiscountType: string;
+  saleDiscountValue: number | null;
   stock: number;
   attributes: Prisma.InputJsonValue | undefined;
   weight: number | null;
@@ -78,6 +83,11 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       sku: await findUniqueVariantSku(variant.sku),
       price: variant.price,
       salePrice: variant.salePrice,
+      saleEnabled: variant.saleEnabled,
+      saleStartsAt: variant.saleStartsAt,
+      saleEndsAt: variant.saleEndsAt,
+      saleDiscountType: variant.saleDiscountType,
+      saleDiscountValue: variant.saleDiscountValue,
       stock: variant.stock,
       attributes: variant.attributes === null ? undefined : (variant.attributes as Prisma.InputJsonValue),
       weight: variant.weight,
@@ -104,6 +114,11 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
               sku: variant.sku,
               price: variant.price,
               salePrice: variant.salePrice,
+              saleEnabled: variant.saleEnabled,
+              saleStartsAt: variant.saleStartsAt,
+              saleEndsAt: variant.saleEndsAt,
+              saleDiscountType: variant.saleDiscountType,
+              saleDiscountValue: variant.saleDiscountValue,
               stock: variant.stock,
               weight: variant.weight,
               isActive: variant.isActive,
